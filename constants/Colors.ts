@@ -28,5 +28,12 @@ export default {
     primary: '#FFFFFF',
     secondary: '#BBBBBB',
     muted: '#888888',
+    disabled: '#555555',
+  },
+  channel: {
+    red: '#FF5252',
+    green: '#4CAF50',
+    blue: '#2196F3',
+    neutral: 'transparent',
   }
 };

@@ -28,9 +28,22 @@ import Colors from '@/constants/Colors';
 import { Widget } from '@/types/widget';
 import WidgetContainer from '@/components/widgets/WidgetContainer';
 import FeaturedWidgetEditor from '@/components/scape/FeaturedWidgetEditor';
-import ChannelSelector from '@/components/scape/ChannelSelector';
 import ContentBrowser from '@/components/scape/ContentBrowser';
 import ThemedScrollView from '@/components/layout/ThemedScrollView';
+
+// We'll use an inline ChannelSelector component
+// Debug Colors object
+console.log('Colors object:', Colors);
+
+// Ensure Colors.channel exists
+if (!Colors.channel) {
+  Colors.channel = {
+    red: '#FF5252',
+    green: '#4CAF50',
+    blue: '#2196F3',
+    neutral: 'transparent'
+  };
+}
 
 // Default empty scape template
 const DEFAULT_SCAPE = {
@@ -81,7 +94,7 @@ export default function UnifiedScapeDocument({
   isNewScape = false
 }: UnifiedScapeDocumentProps) {
   const router = useRouter();
-  
+
   // Initialize state with provided scape or default
   const [scape, setScape] = useState(initialScape || DEFAULT_SCAPE);
   const [widgets, setWidgets] = useState<Widget[]>(initialScape?.widgets || []);
@@ -90,7 +103,7 @@ export default function UnifiedScapeDocument({
   const [showContentBrowser, setShowContentBrowser] = useState(false);
   const [contentBrowserMode, setContentBrowserMode] = useState<'banner' | 'widget'>('widget');
   const [showFeaturedEditor, setShowFeaturedEditor] = useState(false);
-  
+
   // Update widgets when initialScape changes
   useEffect(() => {
     if (initialScape?.widgets) {
@@ -122,7 +135,7 @@ export default function UnifiedScapeDocument({
       channel: 'neutral',
       mediaIds: []
     };
-    
+
     setWidgets([...widgets, newWidget]);
   };
 
@@ -154,18 +167,18 @@ export default function UnifiedScapeDocument({
 
   // Handle widget size change
   const handleWidgetSizeChange = (widgetId: string, newWidth: 1 | 2 | 3) => {
-    setWidgets(widgets.map(w => 
-      w.id === widgetId 
-        ? { ...w, size: { ...w.size, width: newWidth } } 
+    setWidgets(widgets.map(w =>
+      w.id === widgetId
+        ? { ...w, size: { ...w.size, width: newWidth } }
         : w
     ));
   };
 
   // Handle widget channel change
   const handleWidgetChannelChange = (widgetId: string, channel: 'red' | 'green' | 'blue' | 'neutral') => {
-    setWidgets(widgets.map(w => 
-      w.id === widgetId 
-        ? { ...w, channel } 
+    setWidgets(widgets.map(w =>
+      w.id === widgetId
+        ? { ...w, channel }
         : w
     ));
   };
@@ -176,7 +189,7 @@ export default function UnifiedScapeDocument({
       ...w,
       isFeatured: w.id === widgetId
     })));
-    
+
     // Find the widget and open the featured caption editor
     const widget = widgets.find(w => w.id === widgetId);
     if (widget) {
@@ -188,13 +201,13 @@ export default function UnifiedScapeDocument({
   // Handle featured caption update
   const handleFeaturedCaptionUpdate = (caption: string) => {
     if (!selectedWidget) return;
-    
-    setWidgets(widgets.map(w => 
-      w.id === selectedWidget.id 
-        ? { ...w, featuredCaption: caption } 
+
+    setWidgets(widgets.map(w =>
+      w.id === selectedWidget.id
+        ? { ...w, featuredCaption: caption }
         : w
     ));
-    
+
     setShowFeaturedEditor(false);
   };
 
@@ -240,18 +253,17 @@ export default function UnifiedScapeDocument({
     }
   };
 
-  // Get channel color
+  // Get channel color with fallback values
   const getChannelColor = (channel?: string) => {
-    switch (channel) {
-      case 'red':
-        return Colors.channel.red;
-      case 'green':
-        return Colors.channel.green;
-      case 'blue':
-        return Colors.channel.blue;
-      default:
-        return 'transparent';
-    }
+    // Use hardcoded fallback values in case Colors.channel is undefined
+    const channelColors = {
+      red: Colors.channel?.red || '#FF5252',
+      green: Colors.channel?.green || '#4CAF50',
+      blue: Colors.channel?.blue || '#2196F3',
+      neutral: 'transparent'
+    };
+
+    return channelColors[channel as keyof typeof channelColors] || 'transparent';
   };
 
   return (
@@ -261,7 +273,7 @@ export default function UnifiedScapeDocument({
         <View style={styles.nameContainer}>
           <Text style={styles.usernamePrefix}>@{scape.createdBy.username}</Text>
           <Text style={styles.nameSeparator}>/</Text>
-          
+
           {editingName ? (
             <View style={styles.nameEditContainer}>
               <TextInput
@@ -271,7 +283,7 @@ export default function UnifiedScapeDocument({
                 autoFocus
                 selectTextOnFocus
               />
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.nameEditButton}
                 onPress={() => setEditingName(false)}
               >
@@ -281,7 +293,7 @@ export default function UnifiedScapeDocument({
           ) : (
             <View style={styles.nameDisplayContainer}>
               <Text style={styles.nameText}>{scape.name}</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.nameEditButton}
                 onPress={() => setEditingName(true)}
               >
@@ -290,9 +302,9 @@ export default function UnifiedScapeDocument({
             </View>
           )}
         </View>
-        
+
         <View style={styles.headerActions}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.saveButton}
             onPress={saveScape}
           >
@@ -301,9 +313,9 @@ export default function UnifiedScapeDocument({
           </TouchableOpacity>
         </View>
       </View>
-      
+
       {/* Banner Image */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.bannerContainer}
         onPress={handleBannerPress}
       >
@@ -320,7 +332,7 @@ export default function UnifiedScapeDocument({
           </View>
         )}
       </TouchableOpacity>
-      
+
       {/* Widgets */}
       <ThemedScrollView style={styles.widgetsContainer}>
         {widgets.length > 0 ? (
@@ -337,7 +349,7 @@ export default function UnifiedScapeDocument({
                   >
                     <Move size={20} color={index === 0 ? Colors.text.disabled : Colors.text.secondary} />
                   </TouchableOpacity>
-                  
+
                   <TouchableOpacity
                     style={styles.widgetControlButton}
                     onPress={() => moveWidgetDown(index)}
@@ -345,7 +357,7 @@ export default function UnifiedScapeDocument({
                   >
                     <Move size={20} color={index === widgets.length - 1 ? Colors.text.disabled : Colors.text.secondary} style={{ transform: [{ rotate: '180deg' }] }} />
                   </TouchableOpacity>
-                  
+
                   <TouchableOpacity
                     style={styles.widgetControlButton}
                     onPress={() => handleSetFeatured(widget.id)}
@@ -356,7 +368,7 @@ export default function UnifiedScapeDocument({
                       <StarOff size={20} color={Colors.text.secondary} />
                     )}
                   </TouchableOpacity>
-                  
+
                   <TouchableOpacity
                     style={styles.widgetControlButton}
                     onPress={() => handleRemoveWidget(widget.id)}
@@ -364,7 +376,7 @@ export default function UnifiedScapeDocument({
                     <Trash2 size={20} color={Colors.text.secondary} />
                   </TouchableOpacity>
                 </View>
-                
+
                 {/* Widget Container */}
                 <View
                   style={[
@@ -379,12 +391,34 @@ export default function UnifiedScapeDocument({
                     onSizeChange={(newWidth) => handleWidgetSizeChange(widget.id, newWidth)}
                   />
                 </View>
-                
+
                 {/* Channel Selector */}
-                <ChannelSelector
-                  selectedChannel={widget.channel || 'neutral'}
-                  onSelectChannel={(channel) => handleWidgetChannelChange(widget.id, channel)}
-                />
+                <View style={styles.channelSelector}>
+                  <TouchableOpacity
+                    style={[styles.channelOption, widget.channel === 'red' && styles.channelOptionSelected]}
+                    onPress={() => handleWidgetChannelChange(widget.id, 'red')}
+                  >
+                    <View style={[styles.channelDot, { backgroundColor: Colors.channel?.red || '#FF5252' }]} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.channelOption, widget.channel === 'green' && styles.channelOptionSelected]}
+                    onPress={() => handleWidgetChannelChange(widget.id, 'green')}
+                  >
+                    <View style={[styles.channelDot, { backgroundColor: Colors.channel?.green || '#4CAF50' }]} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.channelOption, widget.channel === 'blue' && styles.channelOptionSelected]}
+                    onPress={() => handleWidgetChannelChange(widget.id, 'blue')}
+                  >
+                    <View style={[styles.channelDot, { backgroundColor: Colors.channel?.blue || '#2196F3' }]} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.channelOption, (widget.channel === 'neutral' || !widget.channel) && styles.channelOptionSelected]}
+                    onPress={() => handleWidgetChannelChange(widget.id, 'neutral')}
+                  >
+                    <View style={[styles.channelDot, { backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.text.secondary }]} />
+                  </TouchableOpacity>
+                </View>
               </View>
             ))
         ) : (
@@ -393,14 +427,14 @@ export default function UnifiedScapeDocument({
             <Text style={styles.emptyStateSubtext}>Add widgets to create your scape layout</Text>
           </View>
         )}
-        
+
         {/* Add Widget Button */}
         <TouchableOpacity style={styles.addWidgetButton} onPress={handleAddWidget}>
           <Plus size={24} color={Colors.primary} />
           <Text style={styles.addWidgetText}>Add Widget</Text>
         </TouchableOpacity>
       </ThemedScrollView>
-      
+
       {/* Content Browser Modal */}
       <ContentBrowser
         visible={showContentBrowser}
@@ -429,7 +463,7 @@ export default function UnifiedScapeDocument({
         }}
         widgetType={contentBrowserMode === 'banner' ? 'media' : (selectedWidget?.type || 'media')}
       />
-      
+
       {/* Featured Widget Caption Editor */}
       <Modal
         visible={showFeaturedEditor}
@@ -440,11 +474,13 @@ export default function UnifiedScapeDocument({
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Featured Caption</Text>
-            
+
             <FeaturedWidgetEditor
-              widget={selectedWidget}
+              visible={showFeaturedEditor}
+              onClose={() => setShowFeaturedEditor(false)}
               onSave={handleFeaturedCaptionUpdate}
-              onCancel={() => setShowFeaturedEditor(false)}
+              initialCaption={selectedWidget?.featuredCaption || ''}
+              widgetTitle={selectedWidget?.title || 'Widget'}
             />
           </View>
         </View>
@@ -605,6 +641,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.primary,
     marginLeft: 8,
+  },
+  channelSelector: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  channelOption: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+    backgroundColor: Colors.background.light,
+  },
+  channelOptionSelected: {
+    borderWidth: 2,
+    borderColor: Colors.text.primary,
+  },
+  channelDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
   },
   modalOverlay: {
     flex: 1,

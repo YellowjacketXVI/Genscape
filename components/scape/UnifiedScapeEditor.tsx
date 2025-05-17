@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -9,6 +9,7 @@ import {
   Modal
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   Plus,
   Star,
@@ -22,6 +23,7 @@ import {
 import Colors from '@/constants/Colors';
 import { Widget } from '@/types/widget';
 import WidgetContainer from '@/components/widgets/WidgetContainer';
+import DraggableWidgetWrapper from '@/components/scape/DraggableWidgetWrapper';
 import FeaturedWidgetEditor from '@/components/scape/FeaturedWidgetEditor';
 import ChannelSelector from '@/components/scape/ChannelSelector';
 import ContentBrowser from '@/components/scape/ContentBrowser';
@@ -59,6 +61,11 @@ export default function UnifiedScapeEditor({
   const [showChannelSelector, setShowChannelSelector] = useState(false);
   const [currentEditingWidget, setCurrentEditingWidget] = useState<any>(null);
 
+  // Drag and drop state
+  const [draggingWidgetId, setDraggingWidgetId] = useState<string | null>(null);
+  const [draggingIndex, setDraggingIndex] = useState<number>(-1);
+  const widgetPositions = useRef<{ [key: string]: { y: number, height: number } }>({});
+
   // Update widgets when initialScape changes
   useEffect(() => {
     if (initialScape) {
@@ -69,12 +76,7 @@ export default function UnifiedScapeEditor({
 
   const handleAddWidget = () => {
     // Navigate to widget selector
-    if (isNewScape) {
-      router.push('/scape-wizard/widget-selector');
-    } else {
-      // Use the scape-edit path for consistency
-      router.push('/scape-edit/widget-selector');
-    }
+    router.push('/scape-edit/widget-selector');
   };
 
   const handleWidgetPress = (widget: any) => {
@@ -253,6 +255,82 @@ export default function UnifiedScapeEditor({
     setEditMode(!editMode);
   };
 
+  // Drag and drop handlers
+  const handleDragStart = (widgetId: string, index: number) => {
+    setDraggingWidgetId(widgetId);
+    setDraggingIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    setDraggingWidgetId(null);
+    setDraggingIndex(-1);
+  };
+
+  // Register widget position
+  const registerWidgetPosition = (id: string, y: number, height: number) => {
+    widgetPositions.current[id] = { y, height };
+  };
+
+  // Find the closest widget index based on y position
+  const findClosestWidgetIndex = (y: number): number => {
+    let closestIndex = 0;
+    let minDistance = Number.MAX_VALUE;
+
+    widgets.forEach((widget, index) => {
+      const position = widgetPositions.current[widget.id];
+      if (position) {
+        // Calculate the top and bottom of the widget
+        const widgetTop = position.y;
+        const widgetBottom = position.y + position.height;
+
+        // If the drag position is within the widget's bounds, use that index
+        if (y >= widgetTop && y <= widgetBottom) {
+          closestIndex = index;
+          return; // Exit the forEach early
+        }
+
+        // Otherwise, find the closest widget by center point
+        const widgetCenter = position.y + position.height / 2;
+        const distance = Math.abs(y - widgetCenter);
+
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestIndex = index;
+        }
+      }
+    });
+
+    return closestIndex;
+  };
+
+  // Handle widget reordering
+  const handleReorderWidgets = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
+
+    const newWidgets = [...widgets];
+    const [movedWidget] = newWidgets.splice(fromIndex, 1);
+    newWidgets.splice(toIndex, 0, movedWidget);
+
+    // Update positions
+    newWidgets.forEach((widget, idx) => {
+      widget.position = idx + 1;
+    });
+
+    // Update the dragging index to match the new position
+    setDraggingIndex(toIndex);
+    setWidgets(newWidgets);
+  };
+
+  // Handle widget drag
+  const handleWidgetDrag = (y: number) => {
+    if (draggingIndex === -1) return;
+
+    const newIndex = findClosestWidgetIndex(y);
+    if (newIndex !== draggingIndex) {
+      handleReorderWidgets(draggingIndex, newIndex);
+    }
+  };
+
   const getChannelColor = (channel: string) => {
     switch (channel) {
       case 'red':
@@ -267,7 +345,7 @@ export default function UnifiedScapeEditor({
   };
 
   return (
-    <View style={styles.container}>
+    <GestureHandlerRootView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={onCancel || (() => router.back())}>
           <ArrowLeft size={24} color={Colors.text.primary} />
@@ -285,66 +363,45 @@ export default function UnifiedScapeEditor({
 
       <ThemedScrollView style={styles.content}>
         {widgets.length > 0 ? (
-          widgets.map((widget, index) => (
-            <View key={widget.id} style={styles.widgetWrapper}>
-              {editMode && (
-                <View style={styles.widgetControls}>
-                  <TouchableOpacity
-                    style={[styles.controlButton, index === 0 && styles.disabledButton]}
-                    onPress={() => moveWidgetUp(index)}
-                    disabled={index === 0}
-                  >
-                    <Move size={20} color={index === 0 ? Colors.text.muted : Colors.text.primary} />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.controlButton, index === widgets.length - 1 && styles.disabledButton]}
-                    onPress={() => moveWidgetDown(index)}
-                    disabled={index === widgets.length - 1}
-                  >
-                    <Move size={20} color={index === widgets.length - 1 ? Colors.text.muted : Colors.text.primary} />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.controlButton, { borderColor: getChannelColor(widget.channel) }]}
-                    onPress={() => {
-                      setCurrentEditingWidget(widget);
-                      setShowChannelSelector(true);
-                    }}
-                  >
-                    <View style={[styles.channelIndicator, { backgroundColor: getChannelColor(widget.channel) }]} />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.controlButton}
-                    onPress={() => toggleFeaturedWidget(widget.id)}
-                  >
-                    {widget.isFeatured ? (
-                      <Star size={20} color={Colors.primary} fill={Colors.primary} />
-                    ) : (
-                      <StarOff size={20} color={Colors.text.primary} />
-                    )}
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.controlButton}
-                    onPress={() => handleDeleteWidget(widget.id)}
-                  >
-                    <Trash2 size={20} color={Colors.text.primary} />
-                  </TouchableOpacity>
-                </View>
-              )}
-              <View
-                style={[
-                  styles.widgetContainer,
-                  editMode && { borderLeftWidth: 4, borderLeftColor: getChannelColor(widget.channel) }
-                ]}
+          widgets
+            .sort((a, b) => a.position - b.position)
+            .map((widget, index) => (
+              <DraggableWidgetWrapper
+                key={widget.id}
+                widget={widget}
+                index={index}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onDrag={handleWidgetDrag}
+                onRemove={handleDeleteWidget}
+                onMoveUp={moveWidgetUp}
+                onMoveDown={moveWidgetDown}
+                onSetFeatured={toggleFeaturedWidget}
+                onSelectChannel={(widget) => {
+                  setCurrentEditingWidget(widget);
+                  setShowChannelSelector(true);
+                }}
+                getChannelColor={getChannelColor}
+                registerPosition={registerWidgetPosition}
+                isDragging={widget.id === draggingWidgetId}
+                isFirst={index === 0}
+                isLast={index === widgets.length - 1}
               >
-                <WidgetContainer
-                  widget={widget}
-                  onMediaSelect={() => handleWidgetPress(widget)}
-                  isEditing={editMode}
-                  onSizeChange={(newWidth) => handleWidgetSizeChange(widget.id, newWidth)}
-                />
-              </View>
-            </View>
-          ))
+                <View
+                  style={[
+                    styles.widgetContainer,
+                    editMode && { borderLeftWidth: 4, borderLeftColor: getChannelColor(widget.channel) }
+                  ]}
+                >
+                  <WidgetContainer
+                    widget={widget}
+                    onMediaSelect={() => handleWidgetPress(widget)}
+                    isEditing={editMode}
+                    onSizeChange={(newWidth) => handleWidgetSizeChange(widget.id, newWidth)}
+                  />
+                </View>
+              </DraggableWidgetWrapper>
+            ))
         ) : (
           <View style={styles.emptyState}>
             <Text style={styles.emptyStateText}>No widgets added yet</Text>
@@ -407,7 +464,7 @@ export default function UnifiedScapeEditor({
         }}
         widgetType={selectedWidget?.type || 'media'}
       />
-    </View>
+    </GestureHandlerRootView>
   );
 }
 

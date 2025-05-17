@@ -54,7 +54,9 @@ export default function ScapeManagerScreen() {
   });
 
   const createNewScape = () => {
-    router.push('/scape-wizard');
+    // Create a new scape and navigate to the edit page
+    const newScapeId = `new-${Date.now()}`;
+    router.push(`/scape-edit/${newScapeId}`);
   };
 
   return (

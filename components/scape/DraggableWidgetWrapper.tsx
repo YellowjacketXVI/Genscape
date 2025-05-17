@@ -29,6 +29,8 @@ interface DraggableWidgetWrapperProps {
   onMoveUp: (index: number) => void;
   onMoveDown: (index: number) => void;
   onSetFeatured: (widgetId: string) => void;
+  onSelectChannel?: (widget: Widget) => void;
+  getChannelColor?: (channel: string) => string;
   registerPosition: (id: string, y: number, height: number) => void;
   isDragging: boolean;
   isFirst: boolean;
@@ -46,6 +48,8 @@ export default function DraggableWidgetWrapper({
   onMoveUp,
   onMoveDown,
   onSetFeatured,
+  onSelectChannel,
+  getChannelColor = () => '#888',
   registerPosition,
   isDragging,
   isFirst,
@@ -55,7 +59,7 @@ export default function DraggableWidgetWrapper({
   const translateY = useSharedValue(0);
   const opacity = useSharedValue(1);
   const scale = useSharedValue(1);
-  
+
   // Refs for measurements
   const positionY = useRef<number>(0);
   const height = useRef<number>(0);
@@ -103,7 +107,7 @@ export default function DraggableWidgetWrapper({
   });
 
   return (
-    <Animated.View 
+    <Animated.View
       style={[styles.container, animatedStyle, isDragging && styles.dragging]}
       onLayout={onLayout}
     >
@@ -120,24 +124,35 @@ export default function DraggableWidgetWrapper({
             onPress={() => !isFirst && onMoveUp(index)}
             disabled={isFirst}
           >
-            <Move 
-              size={20} 
-              color={isFirst ? Colors.text.disabled : Colors.text.secondary} 
+            <Move
+              size={20}
+              color={isFirst ? Colors.text.disabled : Colors.text.secondary}
             />
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             style={[styles.controlButton, isLast && styles.disabledButton]}
             onPress={() => !isLast && onMoveDown(index)}
             disabled={isLast}
           >
-            <Move 
-              size={20} 
-              color={isLast ? Colors.text.disabled : Colors.text.secondary} 
+            <Move
+              size={20}
+              color={isLast ? Colors.text.disabled : Colors.text.secondary}
               style={{ transform: [{ rotate: '180deg' }] }}
             />
           </TouchableOpacity>
-          
+
+          {onSelectChannel && (
+            <TouchableOpacity
+              style={[styles.controlButton, { borderColor: getChannelColor(widget.channel || 'neutral') }]}
+              onPress={() => onSelectChannel(widget)}
+            >
+              <View
+                style={[styles.channelIndicator, { backgroundColor: getChannelColor(widget.channel || 'neutral') }]}
+              />
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
             style={styles.controlButton}
             onPress={() => onSetFeatured(widget.id)}
@@ -148,7 +163,7 @@ export default function DraggableWidgetWrapper({
               <StarOff size={20} color={Colors.text.secondary} />
             )}
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             style={styles.controlButton}
             onPress={() => onRemove(widget.id)}
@@ -157,7 +172,7 @@ export default function DraggableWidgetWrapper({
           </TouchableOpacity>
         </View>
       </View>
-      
+
       <View style={styles.widgetContent}>
         {children}
       </View>
@@ -198,6 +213,13 @@ const styles = StyleSheet.create({
   controlButton: {
     padding: 8,
     marginLeft: 4,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  channelIndicator: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
   },
   disabledButton: {
     opacity: 0.5,

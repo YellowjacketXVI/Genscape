@@ -64,8 +64,6 @@ export default function RootLayout() {
               fontFamily: 'Inter-Medium',
             },
           }} />
-          <Stack.Screen name="scape-wizard" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="scape-editor" options={{ headerShown: false }} />
           <Stack.Screen name="scape-edit" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" />
         </Stack>

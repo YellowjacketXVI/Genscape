@@ -199,7 +199,7 @@ export default function SharedWidgetSelector({
 
   const selectWidget = (widget: WidgetType) => {
     // Navigate to widget size selector with the selected widget type
-    const path = isNewScape ? '/scape-wizard/widget-size-selector' : '/scape-edit/widget-size-selector';
+    const path = '/scape-edit/widget-size-selector';
     const params: any = { type: widget.type, title: widget.title };
 
     // Add scapeId if available (for editing existing scapes)

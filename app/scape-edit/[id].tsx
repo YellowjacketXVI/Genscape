@@ -4,7 +4,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Check, ChevronRight } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 import AppContainer from '@/components/layout/AppContainer';
-import UnifiedScapeEditor from '@/components/scape/UnifiedScapeEditor';
+import UnifiedScapeDocument from '@/components/scape/UnifiedScapeDocument';
 
 // Mock data for demonstration
 const MOCK_SCAPE = {
@@ -128,20 +128,10 @@ export default function ScapeEditScreen() {
   return (
     <AppContainer>
       <View style={styles.container}>
-        <View style={styles.editorContainer}>
-          <UnifiedScapeEditor
-            initialScape={scape}
-            onSave={handleSaveScape}
-            onCancel={() => router.back()}
-          />
-        </View>
-
-        <View style={styles.footer}>
-          <TouchableOpacity style={styles.saveButton} onPress={() => router.back()}>
-            <Text style={styles.saveButtonText}>Save Changes</Text>
-            <Check size={20} color="#FFF" />
-          </TouchableOpacity>
-        </View>
+        <UnifiedScapeDocument
+          initialScape={scape}
+          onSave={handleSaveScape}
+        />
       </View>
     </AppContainer>
   );
