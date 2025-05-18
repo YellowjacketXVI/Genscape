@@ -1,4 +1,10 @@
 import { Scape, Widget } from '@/types/Scape';
+import {
+  saveScapeToFile,
+  loadScapeFromFile,
+  listUserScapes,
+  initUserStorage,
+} from './fileStorage';
 
 /**
  * Utility functions for saving and loading scape data
@@ -73,6 +79,40 @@ export const getAllDraftScapesFromLocalStorage = (): Scape[] => {
     console.error('Error getting all draft scapes from local storage:', error);
     return [];
   }
+};
+
+/**
+ * Initialize storage directories for a user
+ */
+export const setupStorageForUser = async (userId: string) => {
+  await initUserStorage(userId);
+};
+
+/**
+ * Save a scape to the user's storage folder and localStorage
+ */
+export const saveScape = async (userId: string, scape: Scape): Promise<void> => {
+  await saveScapeToFile(userId, scape);
+  saveScapeToLocalStorage(scape);
+};
+
+/**
+ * Load a scape from the user's storage folder, falling back to localStorage
+ */
+export const loadScape = async (
+  userId: string,
+  scapeId: string
+): Promise<Scape | null> => {
+  const fileScape = await loadScapeFromFile(userId, scapeId);
+  return fileScape || loadScapeFromLocalStorage(scapeId);
+};
+
+/**
+ * List all scapes for a user from the storage folder
+ */
+export const listScapesForUser = async (userId: string): Promise<Scape[]> => {
+  const scapes = await listUserScapes(userId);
+  return scapes.length ? scapes : getAllDraftScapesFromLocalStorage();
 };
 
 /**
