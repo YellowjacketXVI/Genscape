@@ -62,7 +62,9 @@ export default function ContentManagerScreen() {
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   const [content, setContent] = useState(CONTENT_DATA);
   const [selectedType, setSelectedType] = useState('all');
-  const [zoomLevel, setZoomLevel] = useState(75); // Default zoom level (25-100)
+  // Default zoom level set to 50% so thumbnails start smaller
+  const [zoomLevel, setZoomLevel] = useState(50); // Default zoom level (25-100)
+  const [aspectRatios, setAspectRatios] = useState<Record<string, number>>({});
   const [selectedItem, setSelectedItem] = useState<any>(null); // For detail overlay
   const [detailModalVisible, setDetailModalVisible] = useState(false);
 
@@ -98,6 +100,17 @@ export default function ContentManagerScreen() {
     // This is needed for platforms where direct style updates don't work
     // Force re-render when zoom level changes
   }, [zoomLevel]);
+
+  // Load image sizes so width can scale with aspect ratio
+  useEffect(() => {
+    content.forEach(item => {
+      if (item.thumbnail && !aspectRatios[item.id]) {
+        Image.getSize(item.thumbnail, (w, h) => {
+          setAspectRatios(ar => ({ ...ar, [item.id]: w / h }));
+        }, () => {});
+      }
+    });
+  }, [content]);
 
   // Check if we're on desktop or mobile
   const { width } = useWindowDimensions();
@@ -277,8 +290,9 @@ export default function ContentManagerScreen() {
           const normalizedZoom = (zoomLevel - 25) / 75; // 0 at 25%, 1 at 100%
           const sizeFactor = 0.25 + (normalizedZoom * 0.75); // Scale from 0.25 to 1.0
 
-          // Use uniform height of 372px for grid items
-          const gridItemHeight = 372; // Fixed uniform height
+          // Use uniform height that scales with the zoom level. 372px
+          // represents 100% size, so we scale it from 25-100%.
+          const gridItemHeight = 372 * (zoomLevel / 100);
 
           if (viewMode === 'grid') {
             return (
@@ -299,7 +313,10 @@ export default function ContentManagerScreen() {
                   <>
                     <Image
                       source={{ uri: item.thumbnail }}
-                      style={styles.gridThumbnail}
+                      style={[
+                        styles.gridThumbnail,
+                        { aspectRatio: aspectRatios[item.id] || 1 },
+                      ]}
                       resizeMode="cover"
                     />
                     <View style={styles.gridItemTypeIcon}>
@@ -448,7 +465,6 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   gridThumbnail: {
-    width: '100%',
     height: '100%',
     borderRadius: 0,
   },
@@ -534,7 +550,7 @@ const styles = StyleSheet.create({
     color: Colors.text.muted,
   },
   zoomSlider: {
-    width: '25%', // Make the slider 1/4 of its original length
+    width: '50%', // Slider spans half the header for finer control
     marginHorizontal: 8,
     height: 24,
     justifyContent: 'center',
