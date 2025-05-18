@@ -14,7 +14,7 @@ import {
 import { Search, SlidersHorizontal, Bell } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 import ScapeCard from './ScapeCard';
-import { useScape } from '@/contexts/ScapeContext';
+import { useScape } from '@/context/ScapeContext';
 import ThemedScrollView from '@/components/layout/ThemedScrollView';
 
 export default function Feed() {

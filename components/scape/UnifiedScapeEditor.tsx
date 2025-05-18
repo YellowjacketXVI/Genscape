@@ -75,8 +75,12 @@ export default function UnifiedScapeEditor({
   }, [initialScape]);
 
   const handleAddWidget = () => {
-    // Navigate to widget selector
-    router.push('/scape-edit/widget-selector');
+    // Navigate to widget selector with the current scape ID so the selector
+    // knows where to return the newly created widget.
+    router.push({
+      pathname: '/scape-edit/widget-selector',
+      params: { scapeId: scape.id },
+    });
   };
 
   const handleWidgetPress = (widget: any) => {
@@ -204,7 +208,12 @@ export default function UnifiedScapeEditor({
         {
           text: 'Delete',
           onPress: () => {
-            setWidgets(widgets.filter(widget => widget.id !== widgetId));
+            const updated = widgets.filter(widget => widget.id !== widgetId);
+            // Recalculate positions so ordering remains consistent
+            updated.forEach((w, idx) => {
+              w.position = idx + 1;
+            });
+            setWidgets(updated);
           },
           style: 'destructive',
         },
