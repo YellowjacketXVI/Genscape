@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import BottomNav from '@/components/Layout/BottomNav';
+import BottomNav from '@/components/layout/BottomNav';
 import MediaGrid from '@/components/Content/MediaGrid';
 import UploadPanel from '@/components/Content/UploadPanel';
 import FileDetailsPanel from '@/components/Content/FileDetailsPanel';

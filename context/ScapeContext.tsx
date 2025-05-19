@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Scape, ScapePreview } from '../models/Scape';
-import { Widget, BaseWidget } from '../models/Widget';
+import { Scape, ScapePreview } from '../types/scape';
+import { Widget, BaseWidget } from '../types/widget';
 import { ScapeService } from '../services/ScapeService';
 
 interface ScapeContextType {

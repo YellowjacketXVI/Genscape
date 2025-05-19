@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useWindowDimensions } from 'react-native';
 import ScapeView from './ScapeView';
-import ScapeEditor from './ScapeEditor';
+// Unified editor component for creating and updating scapes
+import UnifiedScapeEditor from './UnifiedScapeEditor';
 
 type Widget = {
   id: string;
@@ -70,23 +72,8 @@ export default function ScapeMaster({
 }: ScapeMasterProps) {
   const [editMode, setEditMode] = useState(isEditing);
   const [currentScape, setCurrentScape] = useState<Scape>(scape);
-  const [isDesktop, setIsDesktop] = useState(false);
-
-  // Check if we're on desktop or mobile
-  useEffect(() => {
-    const handleResize = () => {
-      setIsDesktop(window.innerWidth > 768);
-    };
-    
-    // Set initial value
-    handleResize();
-    
-    // Add event listener
-    window.addEventListener('resize', handleResize);
-    
-    // Clean up
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const { width } = useWindowDimensions();
+  const isDesktop = width > 768;
 
   // Update current scape when prop changes
   useEffect(() => {
@@ -122,8 +109,8 @@ export default function ScapeMaster({
   return (
     <div className={`scape-master ${isDesktop ? 'desktop' : 'mobile'}`}>
       {editMode ? (
-        <ScapeEditor
-          scape={currentScape}
+        <UnifiedScapeEditor
+          initialScape={currentScape}
           onSave={handleSave}
           onCancel={handleCancel}
           isDesktop={isDesktop}

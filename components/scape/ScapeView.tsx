@@ -13,8 +13,10 @@ import {
 import { ArrowLeft, Check, Star, Plus, Heart, MessageCircle, Eye } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import Colors from '@/constants/Colors';
-import { Scape } from '@/models/Scape';
-import { Widget } from '@/models/Widget';
+import { Scape } from '@/types/scape';
+import { Widget } from '@/types/widget';
+import StyledWidgetContainer from '@/components/widgets/StyledWidgetContainer';
+import LiveWidget from '@/components/widgets/LiveWidget';
 
 interface ScapeViewProps {
   scape: Scape;
@@ -80,11 +82,8 @@ export default function ScapeView({
 
   // Render a widget based on its type and size
   const renderWidget = (widget: Widget) => {
-    // Get widget dimensions
-    const dimensions = getWidgetDimensions(widget);
-
-    // Get channel color for border
     const channelColor = getChannelColor(widget.channel);
+    const size = widget.size.width === 1 ? 'sm' : widget.size.width === 2 ? 'md' : 'lg';
 
     return (
       <View
@@ -94,60 +93,17 @@ export default function ScapeView({
           {
             borderColor: channelColor,
             borderWidth: channelColor !== 'transparent' ? 2 : 0,
-          }
+          },
         ]}
       >
-        <TouchableOpacity
-          style={[styles.widget, { height: dimensions.height }]}
-          onPress={() => onWidgetPress && onWidgetPress(widget)}
-          activeOpacity={0.8}
-        >
-          {/* Widget content based on type */}
-          {widget.type === 'media' && (
-            <View style={styles.mediaWidget}>
-              <View style={styles.placeholderMedia}>
-                <Image size={40} color="#666666" />
-              </View>
-              {widget.featuredCaption && (
-                <View style={styles.captionContainer}>
-                  <Text style={styles.captionText}>{widget.featuredCaption}</Text>
-                </View>
-              )}
-            </View>
-          )}
-
-          {widget.type === 'gallery' && (
-            <View style={styles.galleryWidget}>
-              <View style={styles.galleryGrid}>
-                {Array(6).fill(0).map((_, index) => (
-                  <View key={index} style={styles.galleryItem}>
-                    <View style={styles.placeholderGalleryItem}>
-                      <Image size={20} color="#666666" />
-                    </View>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {widget.type === 'text' && (
-            <View style={styles.textWidget}>
-              {widget.content?.title && (
-                <Text style={styles.textTitle}>{widget.content.title}</Text>
-              )}
-              {widget.content?.body && (
-                <Text style={styles.textBody}>{widget.content.body}</Text>
-              )}
-            </View>
-          )}
-
-          {/* Featured indicator */}
-          {widget.isFeatured && (
-            <View style={styles.featuredIndicator}>
-              <Star size={16} color="#FFFFFF" fill="#4CAF50" />
-            </View>
-          )}
-        </TouchableOpacity>
+        {widget.type === 'live' ? (
+          <LiveWidget size={size as 'sm' | 'md' | 'lg'} isLive duration="00:00" comments={[]} />
+        ) : (
+          <StyledWidgetContainer
+            widget={widget}
+            onPress={() => onWidgetPress && onWidgetPress(widget)}
+          />
+        )}
       </View>
     );
   };

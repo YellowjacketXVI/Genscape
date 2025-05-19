@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, FlatList, Image, Modal, Dimensions, useWindowDimensions } from 'react-native';
 import AppContainer from '@/components/layout/AppContainer';
-import { X, Image as ImageIcon, Music, Video, File } from 'lucide-react-native';
+import { X } from 'lucide-react-native';
+import MediaItem from '@/components/media/MediaItem';
 import Colors from '@/constants/Colors';
 
 type ContentBrowserProps = {
@@ -79,35 +80,16 @@ export default function ContentBrowser({ visible, onClose, onSelect, widgetType 
   };
 
   const renderMediaItem = ({ item }: { item: any }) => {
-    const getMediaIcon = () => {
-      switch (item.type) {
-        case 'audio':
-          return <Music size={32} color={Colors.text.primary} />;
-        case 'video':
-          return <Video size={32} color={Colors.text.primary} />;
-        default:
-          return <File size={32} color={Colors.text.primary} />;
-      }
+    const mappedItem = {
+      id: item.id,
+      type: item.type,
+      name: item.title,
+      preview: item.thumbnail || '',
     };
 
     return (
-      <TouchableOpacity
-        style={styles.mediaItem}
-        onPress={() => onSelect(item.id)}
-      >
-        {item.thumbnail ? (
-          <Image
-            source={{ uri: item.thumbnail }}
-            style={styles.mediaThumbnail}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={styles.mediaIconContainer}>
-            {getMediaIcon()}
-          </View>
-        )}
-        <Text style={styles.mediaTitle} numberOfLines={2}>{item.title}</Text>
-        <Text style={styles.mediaType}>{item.type}</Text>
+      <TouchableOpacity style={styles.mediaItem} onPress={() => onSelect(item.id)}>
+        <MediaItem item={mappedItem} />
       </TouchableOpacity>
     );
   };

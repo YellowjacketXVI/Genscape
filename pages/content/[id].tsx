@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import SlidePanel from '@/components/Layout/SlidePanel';
+import SlidePanel from '@/components/layout/SlidePanel';
 
 export default function ContentDetail() {
   const router = useRouter();

@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, View, Text, Image, TouchableOpacity, Dimensions } from 'react-native';
 import { Star } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
-import { Widget } from '@/models/Widget';
+import { Widget } from '@/types/widget';
 
 interface StyledWidgetContainerProps {
   widget: Widget;

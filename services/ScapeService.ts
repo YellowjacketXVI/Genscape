@@ -1,5 +1,5 @@
-import { Scape, ScapePreview } from '../models/Scape';
-import { Widget, BaseWidget } from '../models/Widget';
+import { Scape, ScapePreview } from '../types/scape';
+import { Widget, BaseWidget } from '../types/widget';
 
 /**
  * Service for managing scapes and their widgets

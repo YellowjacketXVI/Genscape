@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import BottomNav from '@/components/Layout/BottomNav';
-import FilterBar from '@/components/Layout/FilterBar';
+import BottomNav from '@/components/layout/BottomNav';
+import FilterBar from '@/components/layout/FilterBar';
 import FeedCard from '@/components/Feed/FeedCard';
 
 export default function Home() {
