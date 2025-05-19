@@ -139,45 +139,51 @@ export default function GalleryWidget({
         </div>
         
         <div className="widget-edit-content">
-          <div className="gallery-items">
+          <div className="gallery-scroll">
             {galleryItems.length > 0 ? (
               <div className={`gallery-edit-${layout}`}>
                 {galleryItems.map((item) => (
                   <div key={item.id} className="gallery-item-edit">
                     <div className="item-preview">
                       {item.url ? (
-                        <img 
-                          src={item.url} 
-                          alt={item.caption || 'Gallery item'} 
-                          className="item-image" 
+                        <img
+                          src={item.url}
+                          alt={item.caption || 'Gallery item'}
+                          className="item-image"
                         />
                       ) : (
                         <div className="item-placeholder">
                           <span>Loading...</span>
                         </div>
                       )}
-                      
-                      <button 
-                        className="remove-item-button" 
+
+                      <button
+                        className="remove-item-button"
                         onClick={() => handleRemoveItem(item.id)}
                       >
                         &times;
                       </button>
                     </div>
-                    
-                    <input 
-                      type="text" 
-                      value={item.caption || ''} 
-                      onChange={(e) => handleCaptionChange(item.id, e.target.value)} 
-                      placeholder="Caption" 
-                      className="item-caption-input" 
+
+                    <input
+                      type="text"
+                      value={item.caption || ''}
+                      onChange={(e) => handleCaptionChange(item.id, e.target.value)}
+                      placeholder="Caption"
+                      className="item-caption-input"
                     />
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="empty-gallery">
-                <p>No items in gallery</p>
+              <div className={`gallery-edit-${layout}`}>
+                {Array.from({ length: 3 }).map((_, idx) => (
+                  <div key={idx} className="gallery-item-edit placeholder">
+                    <div className="item-preview">
+                      <div className="item-placeholder" />
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -204,40 +210,42 @@ export default function GalleryWidget({
 
   return (
     <div className="gallery-widget">
-      {galleryItems.length > 0 ? (
-        <div className={`gallery-${layout}`}>
-          {galleryItems.map((item) => (
-            <div key={item.id} className="gallery-item">
-              {item.url ? (
-                <img 
-                  src={item.url} 
-                  alt={item.caption || 'Gallery item'} 
-                  className="item-image" 
-                />
-              ) : (
-                <div className="item-placeholder">
-                  <span>Image not available</span>
-                </div>
-              )}
-              
-              {item.caption && (
-                <div className="item-caption">
-                  <p>{item.caption}</p>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="empty-gallery">
-          <svg className="empty-icon" viewBox="0 0 24 24">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-            <circle cx="8.5" cy="8.5" r="1.5" />
-            <polyline points="21 15 16 10 5 21" />
-          </svg>
-          <span>No images in gallery</span>
-        </div>
-      )}
+      <div className="gallery-scroll">
+        {galleryItems.length > 0 ? (
+          <div className={`gallery-${layout}`}>
+            {galleryItems.map((item) => (
+              <div key={item.id} className="gallery-item">
+                {item.url ? (
+                  <img
+                    src={item.url}
+                    alt={item.caption || 'Gallery item'}
+                    className="item-image"
+                  />
+                ) : (
+                  <div className="item-placeholder">
+                    <span>Image not available</span>
+                  </div>
+                )}
+
+                {item.caption && (
+                  <div className="item-caption">
+                    <p>{item.caption}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-gallery">
+            <svg className="empty-icon" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <polyline points="21 15 16 10 5 21" />
+            </svg>
+            <span>No images in gallery</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
