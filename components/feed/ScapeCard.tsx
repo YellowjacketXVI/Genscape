@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, Image, TouchableOpacity, Platform, useWindowDim
 import { useRouter } from 'expo-router';
 import { Heart, MessageCircle, Bookmark, ShoppingBag, Image as ImageIcon } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
-import { ScapePreview } from '@/models/Scape';
+import { ScapePreview } from '@/types/scape';
 
 interface ScapeCardProps {
   scape: ScapePreview;

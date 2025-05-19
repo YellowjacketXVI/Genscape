@@ -36,14 +36,14 @@ export const WIDGET_CHANNELS = {
 };
 
 // Dynamic imports for widget components
-const TextWidget = dynamic(() => import('@/components/Scape/widgets/TextWidget'));
-const ImageWidget = dynamic(() => import('@/components/Scape/widgets/ImageWidget'));
-const GalleryWidget = dynamic(() => import('@/components/Scape/widgets/GalleryWidget'));
-const ShopWidget = dynamic(() => import('@/components/Scape/widgets/ShopWidget'));
-const AudioWidget = dynamic(() => import('@/components/Scape/widgets/AudioWidget'));
-const CommsWidget = dynamic(() => import('@/components/Scape/widgets/CommsWidget'));
-const ButtonWidget = dynamic(() => import('@/components/Scape/widgets/ButtonWidget'));
-const LLMWidget = dynamic(() => import('@/components/Scape/widgets/LLMWidget'));
+const TextWidget = dynamic(() => import('@/components/scape/widgets/TextWidget'));
+const ImageWidget = dynamic(() => import('@/components/scape/widgets/ImageWidget'));
+const GalleryWidget = dynamic(() => import('@/components/scape/widgets/GalleryWidget'));
+const ShopWidget = dynamic(() => import('@/components/scape/widgets/ShopWidget'));
+const AudioWidget = dynamic(() => import('@/components/scape/widgets/AudioWidget'));
+const CommsWidget = dynamic(() => import('@/components/scape/widgets/CommsWidget'));
+const ButtonWidget = dynamic(() => import('@/components/scape/widgets/ButtonWidget'));
+const LLMWidget = dynamic(() => import('@/components/scape/widgets/LLMWidget'));
 
 // Widget registry mapping
 const widgetRegistry = {

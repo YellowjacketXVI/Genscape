@@ -12,7 +12,7 @@ import {
   Trash2
 } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
-import { Widget, getWidgetSizeName } from '@/models/Widget';
+import { Widget, getWidgetSizeName } from '@/types/widget';
 
 interface WidgetContainerProps {
   widget: Widget;

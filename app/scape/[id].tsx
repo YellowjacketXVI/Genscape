@@ -12,7 +12,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, Check, Star, Plus, Heart, MessageCircle, Eye } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 import ScapeView from '@/components/scape/ScapeView';
-import { Widget } from '@/models/Widget';
+import { Widget } from '@/types/widget';
 
 // Mock data for demonstration
 const MOCK_SCAPE = {

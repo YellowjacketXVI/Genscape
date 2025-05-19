@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import ScapeWizard from '@/components/Scape/ScapeWizard';
+import ScapeWizard from '@/components/scape/ScapeWizard';
 
 export default function ScapeWizardPage() {
   const router = useRouter();

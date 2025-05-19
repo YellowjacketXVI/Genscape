@@ -22,7 +22,8 @@ import {
 } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 import { Widget } from '@/types/widget';
-import WidgetContainer from '@/components/widgets/WidgetContainer';
+import EnhancedWidgetContainer from '@/components/widgets/EnhancedWidgetContainer';
+import useWidgetManager from '@/hooks/useWidgetManager';
 import DraggableWidgetWrapper from '@/components/scape/DraggableWidgetWrapper';
 import FeaturedWidgetEditor from '@/components/scape/FeaturedWidgetEditor';
 import ChannelSelector from '@/components/scape/ChannelSelector';
@@ -53,7 +54,17 @@ export default function UnifiedScapeEditor({
   };
 
   const [scape, setScape] = useState(initialScape || defaultScape);
-  const [widgets, setWidgets] = useState<any[]>(initialScape?.widgets || []);
+  const {
+    widgets,
+    addWidget,
+    removeWidget,
+    updateWidget,
+    moveWidgetUp,
+    moveWidgetDown,
+    reorderWidgets,
+    setFeaturedWidget,
+    setWidgetChannel,
+  } = useWidgetManager(initialScape?.widgets || []);
   const [editMode, setEditMode] = useState(true);
   const [showContentBrowser, setShowContentBrowser] = useState(false);
   const [selectedWidget, setSelectedWidget] = useState<any>(null);
@@ -70,7 +81,6 @@ export default function UnifiedScapeEditor({
   useEffect(() => {
     if (initialScape) {
       setScape(initialScape);
-      setWidgets(initialScape.widgets || []);
     }
   }, [initialScape]);
 
@@ -105,18 +115,7 @@ export default function UnifiedScapeEditor({
 
   // Handle widget size change
   const handleWidgetSizeChange = (widgetId: string, newWidth: number) => {
-    setWidgets(widgets.map(widget => {
-      if (widget.id === widgetId) {
-        return {
-          ...widget,
-          size: {
-            ...widget.size,
-            width: newWidth
-          }
-        };
-      }
-      return widget;
-    }));
+    updateWidget(widgetId, { size: { width: newWidth as 1 | 2 | 3, height: 3 } });
   };
 
   const handleWidgetLongPress = (widget: any) => {
@@ -172,22 +171,14 @@ export default function UnifiedScapeEditor({
       setShowFeaturedEditor(true);
     } else {
       // If removing featured status
-      setWidgets(widgets.map(w =>
-        w.id === widgetId
-          ? { ...w, isFeatured: false, featuredCaption: '' }
-          : w
-      ));
+      setFeaturedWidget(widgetId, '');
     }
   };
 
   const saveFeaturedCaption = (caption: string) => {
     if (!currentEditingWidget) return;
 
-    setWidgets(widgets.map(w =>
-      w.id === currentEditingWidget.id
-        ? { ...w, isFeatured: true, featuredCaption: caption.slice(0, 300) }
-        : w
-    ));
+    setFeaturedWidget(currentEditingWidget.id, caption.slice(0, 300));
 
     setCurrentEditingWidget(null);
   };
@@ -203,35 +194,19 @@ export default function UnifiedScapeEditor({
         },
         {
           text: 'Delete',
-          onPress: () => {
-            setWidgets(widgets.filter(widget => widget.id !== widgetId));
-          },
+          onPress: () => removeWidget(widgetId),
           style: 'destructive',
         },
       ]
     );
   };
 
-  const moveWidgetUp = (index: number) => {
-    if (index === 0) return;
-    const newWidgets = [...widgets];
-    [newWidgets[index], newWidgets[index - 1]] = [newWidgets[index - 1], newWidgets[index]];
-    // Update positions
-    newWidgets.forEach((widget, idx) => {
-      widget.position = idx + 1;
-    });
-    setWidgets(newWidgets);
+  const moveWidgetUpLocal = (index: number) => {
+    moveWidgetUp(index);
   };
 
-  const moveWidgetDown = (index: number) => {
-    if (index === widgets.length - 1) return;
-    const newWidgets = [...widgets];
-    [newWidgets[index], newWidgets[index + 1]] = [newWidgets[index + 1], newWidgets[index]];
-    // Update positions
-    newWidgets.forEach((widget, idx) => {
-      widget.position = idx + 1;
-    });
-    setWidgets(newWidgets);
+  const moveWidgetDownLocal = (index: number) => {
+    moveWidgetDown(index);
   };
 
   const saveScape = () => {
@@ -318,7 +293,7 @@ export default function UnifiedScapeEditor({
 
     // Update the dragging index to match the new position
     setDraggingIndex(toIndex);
-    setWidgets(newWidgets);
+    reorderWidgets(newWidgets.map(w => w.id));
   };
 
   // Handle widget drag
@@ -374,8 +349,8 @@ export default function UnifiedScapeEditor({
                 onDragEnd={handleDragEnd}
                 onDrag={handleWidgetDrag}
                 onRemove={handleDeleteWidget}
-                onMoveUp={moveWidgetUp}
-                onMoveDown={moveWidgetDown}
+                onMoveUp={moveWidgetUpLocal}
+                onMoveDown={moveWidgetDownLocal}
                 onSetFeatured={toggleFeaturedWidget}
                 onSelectChannel={(widget) => {
                   setCurrentEditingWidget(widget);
@@ -393,7 +368,7 @@ export default function UnifiedScapeEditor({
                     editMode && { borderLeftWidth: 4, borderLeftColor: getChannelColor(widget.channel) }
                   ]}
                 >
-                  <WidgetContainer
+                  <EnhancedWidgetContainer
                     widget={widget}
                     onMediaSelect={() => handleWidgetPress(widget)}
                     isEditing={editMode}
@@ -432,11 +407,7 @@ export default function UnifiedScapeEditor({
         onClose={() => setShowChannelSelector(false)}
         onSelect={(channelId) => {
           if (currentEditingWidget) {
-            setWidgets(widgets.map(w =>
-              w.id === currentEditingWidget.id
-                ? { ...w, channel: channelId }
-                : w
-            ));
+            setWidgetChannel(currentEditingWidget.id, channelId);
             setCurrentEditingWidget(null);
           }
         }}
@@ -450,14 +421,8 @@ export default function UnifiedScapeEditor({
         onSelect={(mediaId) => {
           if (selectedWidget) {
             // Update the widget with the selected media
-            setWidgets(widgets.map(w =>
-              w.id === selectedWidget.id
-                ? {
-                    ...w,
-                    mediaIds: w.mediaIds ? [...w.mediaIds, mediaId] : [mediaId]
-                  }
-                : w
-            ));
+            const mediaIds = selectedWidget.mediaIds ? [...selectedWidget.mediaIds, mediaId] : [mediaId];
+            updateWidget(selectedWidget.id, { mediaIds });
             setSelectedWidget(null);
             setShowContentBrowser(false);
           }

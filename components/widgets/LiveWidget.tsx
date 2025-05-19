@@ -1,5 +1,4 @@
 import React from 'react';
-import './LiveWidget.css';
 
 type Comment = {
   id: string;
