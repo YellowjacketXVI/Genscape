@@ -25,7 +25,12 @@ import {
   Check
 } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
-import { Widget } from '@/types/widget';
+import {
+  Widget,
+  GalleryWidget,
+  ShopWidget,
+  AudioWidget,
+} from '@/types/widget';
 import WidgetContainer from '@/components/widgets/WidgetContainer';
 import FeaturedWidgetEditor from '@/components/scape/FeaturedWidgetEditor';
 import ContentBrowser from '@/components/scape/ContentBrowser';
@@ -448,14 +453,82 @@ export default function UnifiedScapeDocument({
             });
           } else if (selectedWidget) {
             // Update the widget with the selected media
-            setWidgets(widgets.map(w =>
-              w.id === selectedWidget.id
-                ? {
-                    ...w,
-                    mediaIds: w.mediaIds ? [...w.mediaIds, mediaId] : [mediaId]
+            setWidgets(
+              widgets.map((w) => {
+                if (w.id !== selectedWidget.id) return w;
+
+                switch (selectedWidget.type) {
+                  case 'media':
+                    return {
+                      ...w,
+                      mediaIds: w.mediaIds ? [...w.mediaIds, mediaId] : [mediaId],
+                    };
+                  case 'gallery': {
+                    const gw = w as GalleryWidget;
+                    return {
+                      ...gw,
+                      items: gw.items
+                        ? [...gw.items, { id: `item-${Date.now()}`, mediaId }]
+                        : [{ id: `item-${Date.now()}`, mediaId }],
+                    };
                   }
-                : w
-            ));
+                  case 'shop': {
+                    const sw = w as ShopWidget;
+                    return {
+                      ...sw,
+                      products: sw.products
+                        ? [
+                            ...sw.products,
+                            {
+                              id: `product-${Date.now()}`,
+                              mediaId,
+                              name: '',
+                              price: 0,
+                              available: true,
+                            },
+                          ]
+                        : [
+                            {
+                              id: `product-${Date.now()}`,
+                              mediaId,
+                              name: '',
+                              price: 0,
+                              available: true,
+                            },
+                          ],
+                    };
+                  }
+                  case 'audio': {
+                    const aw = w as AudioWidget;
+                    return {
+                      ...aw,
+                      tracks: aw.tracks
+                        ? [
+                            ...aw.tracks,
+                            {
+                              id: `track-${Date.now()}`,
+                              mediaId,
+                              title: '',
+                              artist: '',
+                              duration: 0,
+                            },
+                          ]
+                        : [
+                            {
+                              id: `track-${Date.now()}`,
+                              mediaId,
+                              title: '',
+                              artist: '',
+                              duration: 0,
+                            },
+                          ],
+                    };
+                  }
+                  default:
+                    return w;
+                }
+              })
+            );
           }
           setSelectedWidget(null);
           setShowContentBrowser(false);
