@@ -448,14 +448,76 @@ export default function UnifiedScapeDocument({
             });
           } else if (selectedWidget) {
             // Update the widget with the selected media
-            setWidgets(widgets.map(w =>
-              w.id === selectedWidget.id
-                ? {
-                    ...w,
-                    mediaIds: w.mediaIds ? [...w.mediaIds, mediaId] : [mediaId]
-                  }
-                : w
-            ));
+            setWidgets(
+              widgets.map((w) => {
+                if (w.id !== selectedWidget.id) return w;
+
+                switch (selectedWidget.type) {
+                  case 'media':
+                    return {
+                      ...w,
+                      mediaIds: w.mediaIds ? [...w.mediaIds, mediaId] : [mediaId],
+                    };
+                  case 'gallery':
+                    return {
+                      ...w,
+                      items: (w as any).items
+                        ? [...(w as any).items, { id: `item-${Date.now()}`, mediaId }]
+                        : [{ id: `item-${Date.now()}`, mediaId }],
+                    } as any;
+                  case 'shop':
+                    return {
+                      ...w,
+                      products: (w as any).products
+                        ? [
+                            ...(w as any).products,
+                            {
+                              id: `product-${Date.now()}`,
+                              mediaId,
+                              name: '',
+                              price: 0,
+                              available: true,
+                            },
+                          ]
+                        : [
+                            {
+                              id: `product-${Date.now()}`,
+                              mediaId,
+                              name: '',
+                              price: 0,
+                              available: true,
+                            },
+                          ],
+                    } as any;
+                  case 'audio':
+                    return {
+                      ...w,
+                      tracks: (w as any).tracks
+                        ? [
+                            ...(w as any).tracks,
+                            {
+                              id: `track-${Date.now()}`,
+                              mediaId,
+                              title: '',
+                              artist: '',
+                              duration: 0,
+                            },
+                          ]
+                        : [
+                            {
+                              id: `track-${Date.now()}`,
+                              mediaId,
+                              title: '',
+                              artist: '',
+                              duration: 0,
+                            },
+                          ],
+                    } as any;
+                  default:
+                    return w;
+                }
+              })
+            );
           }
           setSelectedWidget(null);
           setShowContentBrowser(false);
