@@ -126,17 +126,16 @@ export default function UnifiedScapeDocument({
 
   // Handle adding a new widget
   const handleAddWidget = () => {
-    const newWidget: Widget = {
-      id: `widget_${Date.now()}`,
-      type: 'media',
-      title: 'New Widget',
-      size: { width: 3, height: 3 },
-      position: widgets.length + 1,
-      channel: 'neutral',
-      mediaIds: []
-    };
+    const params: any = {};
 
-    setWidgets([...widgets, newWidget]);
+    if (scape?.id) {
+      params.scapeId = scape.id;
+    }
+
+    router.push({
+      pathname: '/scape-edit/widget-selector',
+      params
+    });
   };
 
   // Handle removing a widget
