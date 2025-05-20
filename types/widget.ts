@@ -29,6 +29,7 @@ export type GalleryWidget = BaseWidget & {
     id: string;
     mediaId: string;
     caption?: string;
+    url?: string;
   }>;
 };
 
@@ -42,6 +43,7 @@ export type ShopWidget = BaseWidget & {
     price: number;
     description?: string;
     available: boolean;
+    imageUrl?: string;
   }>;
 };
 
@@ -54,6 +56,7 @@ export type AudioWidget = BaseWidget & {
     title: string;
     artist: string;
     duration: number;
+    audioUrl?: string;
   }>;
   currentTrack?: string;
 };

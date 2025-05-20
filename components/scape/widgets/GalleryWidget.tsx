@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getMediaById } from '@/data/localMedia';
 
 type GalleryItem = {
   id: string;
@@ -30,37 +31,24 @@ export default function GalleryWidget({
   const [layout, setLayout] = useState<'horizontal' | 'grid'>(widget.layout || 'grid');
   const [loading, setLoading] = useState(false);
 
-  // Fetch media data for all items
+  // Load media from local assets
   useEffect(() => {
-    const fetchMediaItems = async () => {
+    const fetchMediaItems = () => {
       if (!widget.items || widget.items.length === 0) {
         return;
       }
-      
+
       setLoading(true);
-      
+
       try {
-        // Create a copy of items to update with URLs
-        const updatedItems = [...widget.items];
-        
-        // Fetch each media item
-        for (let i = 0; i < updatedItems.length; i++) {
-          const item = updatedItems[i];
-          
-          // Skip if no mediaId
-          if (!item.mediaId) continue;
-          
-          // Replace with actual API call
-          const response = await fetch(`/api/media/${item.mediaId}`);
-          const data = await response.json();
-          
-          // Update item with URL
-          updatedItems[i] = {
+        const updatedItems = widget.items.map((item) => {
+          const media = getMediaById(item.mediaId);
+          return {
             ...item,
-            url: data.url,
+            url: media?.url,
           };
-        }
-        
+        });
+
         setGalleryItems(updatedItems);
       } catch (error) {
         console.error('Error fetching gallery media:', error);
@@ -68,7 +56,7 @@ export default function GalleryWidget({
         setLoading(false);
       }
     };
-    
+
     fetchMediaItems();
   }, [widget.items]);
 

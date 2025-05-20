@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getMediaById } from '@/data/localMedia';
 
 type Product = {
   id: string;
@@ -35,41 +36,27 @@ export default function ShopWidget({
 
   // Fetch product data when products change
   useEffect(() => {
-    const fetchProductData = async () => {
+    const fetchProductData = () => {
       if (!widget.products || widget.products.length === 0) {
         setProducts([]);
         return;
       }
-      
+
       setLoading(true);
-      
+
       try {
-        // In a real app, this would be an API call to fetch product details
-        // For now, we'll just add image URLs to the products
-        const updatedProducts = await Promise.all(
-          widget.products.map(async (product) => {
-            if (!product.mediaId) {
-              return { ...product, imageUrl: undefined };
-            }
-            
-            try {
-              // Mock API call - would be replaced with actual API
-              // const response = await fetch(`/api/media/${product.mediaId}`);
-              // const data = await response.json();
-              // return { ...product, imageUrl: data.url };
-              
-              // For now, just use a placeholder
-              return { 
-                ...product, 
-                imageUrl: `https://placehold.co/600x400?text=${encodeURIComponent(product.name)}` 
-              };
-            } catch (error) {
-              console.error(`Error fetching media for product ${product.id}:`, error);
-              return { ...product, imageUrl: undefined };
-            }
-          })
-        );
-        
+        const updatedProducts = widget.products.map((product) => {
+          if (!product.mediaId) {
+            return { ...product, imageUrl: undefined };
+          }
+
+          const media = getMediaById(product.mediaId);
+          return {
+            ...product,
+            imageUrl: media?.url,
+          };
+        });
+
         setProducts(updatedProducts);
       } catch (error) {
         console.error('Error fetching product data:', error);

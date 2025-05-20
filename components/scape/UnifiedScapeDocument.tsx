@@ -29,11 +29,10 @@ import { Widget } from '@/types/widget';
 import WidgetContainer from '@/components/widgets/WidgetContainer';
 import FeaturedWidgetEditor from '@/components/scape/FeaturedWidgetEditor';
 import ContentBrowser from '@/components/scape/ContentBrowser';
+import { GalleryWidget, ShopWidget, AudioWidget } from '@/types/widget';
 import ThemedScrollView from '@/components/layout/ThemedScrollView';
 
 // We'll use an inline ChannelSelector component
-// Debug Colors object
-console.log('Colors object:', Colors);
 
 // Ensure Colors.channel exists
 if (!Colors.channel) {
@@ -247,7 +246,6 @@ export default function UnifiedScapeDocument({
       onSave(updatedScape);
     } else {
       // Default save behavior
-      console.log('Saving scape:', updatedScape);
       Alert.alert('Success', 'Scape saved successfully!');
     }
   };
@@ -438,24 +436,66 @@ export default function UnifiedScapeDocument({
       <ContentBrowser
         visible={showContentBrowser}
         onClose={() => setShowContentBrowser(false)}
-        onSelect={(mediaId) => {
+        onSelect={(media) => {
           if (contentBrowserMode === 'banner') {
             // Update banner image
             // In a real app, you would fetch the media URL based on the ID
             setScape({
               ...scape,
-              bannerImage: 'https://images.pexels.com/photos/1366957/pexels-photo-1366957.jpeg' // Mock URL
+              bannerImage: media.preview
             });
           } else if (selectedWidget) {
             // Update the widget with the selected media
-            setWidgets(widgets.map(w =>
-              w.id === selectedWidget.id
-                ? {
-                    ...w,
-                    mediaIds: w.mediaIds ? [...w.mediaIds, mediaId] : [mediaId]
-                  }
-                : w
-            ));
+            setWidgets(
+              widgets.map((w) => {
+                if (w.id !== selectedWidget.id) return w;
+
+                switch (selectedWidget.type) {
+                  case 'media':
+                    return {
+                      ...w,
+                      mediaIds: w.mediaIds ? [...w.mediaIds, media.id] : [media.id],
+                    };
+                  case 'gallery':
+                    const gw = w as GalleryWidget;
+                    const newItem = { id: crypto.randomUUID(), mediaId: media.id, url: media.preview };
+                    return {
+                      ...gw,
+                      items: gw.items ? [...gw.items, newItem] : [newItem],
+                    };
+                  case 'shop':
+                    const sw = w as ShopWidget;
+                    const newProduct = {
+                      id: crypto.randomUUID(),
+                      mediaId: media.id,
+                      name: '',
+                      price: 0,
+                      available: true,
+                      imageUrl: media.preview,
+                    };
+                    return {
+                      ...sw,
+                      products: sw.products ? [...sw.products, newProduct] : [newProduct],
+                    };
+                  case 'audio':
+                    const aw = w as AudioWidget;
+                    const newTrack = {
+                      id: crypto.randomUUID(),
+                      mediaId: media.id,
+                      title: '',
+                      artist: '',
+                      duration: 0,
+                      audioUrl: media.preview,
+                    };
+                    return {
+                      ...aw,
+                      tracks: aw.tracks ? [...aw.tracks, newTrack] : [newTrack],
+                    };
+                  default:
+                    return w;
+                }
+              })
+            );
           }
           setSelectedWidget(null);
           setShowContentBrowser(false);
