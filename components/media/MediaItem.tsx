@@ -8,7 +8,7 @@ type MediaItemProps = {
     id: string;
     type: string;
     name: string;
-    preview: string;
+    preview: any;
   };
 };
 
@@ -33,8 +33,12 @@ export default function MediaItem({ item }: MediaItemProps) {
   return (
     <TouchableOpacity style={styles.container} onPress={toggleSelect}>
       <View style={styles.preview}>
-        <Image 
-          source={{ uri: item.preview }} 
+        <Image
+          source={
+            typeof item.preview === 'number'
+              ? item.preview
+              : { uri: item.preview }
+          }
           style={styles.previewImage}
           resizeMode="cover"
         />

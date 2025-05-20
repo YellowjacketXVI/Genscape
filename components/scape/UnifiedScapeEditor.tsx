@@ -418,10 +418,9 @@ export default function UnifiedScapeEditor({
       <ContentBrowser
         visible={showContentBrowser}
         onClose={() => setShowContentBrowser(false)}
-        onSelect={(mediaId) => {
+        onSelect={(media) => {
           if (selectedWidget) {
-            // Update the widget with the selected media
-            const mediaIds = selectedWidget.mediaIds ? [...selectedWidget.mediaIds, mediaId] : [mediaId];
+            const mediaIds = selectedWidget.mediaIds ? [...selectedWidget.mediaIds, media.id] : [media.id];
             updateWidget(selectedWidget.id, { mediaIds });
             setSelectedWidget(null);
             setShowContentBrowser(false);
