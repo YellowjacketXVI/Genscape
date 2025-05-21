@@ -100,9 +100,12 @@ export default function WidgetContainer({ widget, onMediaSelect, isEditing = fal
     const widgetWidth = containerWidth;
 
     // Calculate heights based on the specified aspect ratios
-    let widgetHeight = 0;
+    let widgetHeight: number | undefined;
 
-    if (isDesktop) {
+    if (widget.type === 'text' || widget.type === 'header') {
+      // Text widgets size dynamically based on content
+      widgetHeight = undefined;
+    } else if (isDesktop) {
       // Desktop sizes
       if (widget.size.width === 1) { // Small (1x3)
         widgetHeight = 372; // Base height for small widget

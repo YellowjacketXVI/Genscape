@@ -77,7 +77,7 @@
   /* Text Widget */
   --text-header: var(--font-size-xxxl);
   --text-subheader: var(--font-size-xxl);
-  --text-body: var(--font-size-md);
+  --text-body: var(--font-size-xs);
   --text-color: var(--color-text-primary);
   --text-bg: transparent;
   

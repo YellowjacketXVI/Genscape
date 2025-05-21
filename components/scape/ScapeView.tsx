@@ -375,7 +375,8 @@ const styles = StyleSheet.create({
   },
   textWidget: {
     flex: 1,
-    padding: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 0,
   },
   textTitle: {
     fontFamily: 'Inter-Bold',

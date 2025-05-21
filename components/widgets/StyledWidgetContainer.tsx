@@ -30,8 +30,11 @@ export default function StyledWidgetContainer({ widget, onPress }: StyledWidgetC
     let width = availableWidth;
 
     // Calculate height based on widget type and size
-    let height;
-    if (widget.type === 'gallery') {
+    let height: number | undefined;
+    if (widget.type === 'text' || widget.type === 'header') {
+      // Text widgets should size dynamically based on their content
+      height = undefined;
+    } else if (widget.type === 'gallery') {
       height = width; // Square for gallery
     } else if (widget.size.width === 3) {
       height = width / 2; // Half width for large widgets
@@ -199,7 +202,8 @@ const styles = StyleSheet.create({
   },
   textContent: {
     flex: 1,
-    padding: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 0,
   },
   textTitle: {
     fontFamily: 'Inter-Bold',

@@ -86,7 +86,11 @@ export default function EnhancedWidgetContainer({
     const width = baseWidth * widget.size.width + (widget.size.width - 1) * gutterWidth;
     
     // Calculate height (fixed aspect ratio based on width)
-    const height = widget.size.height * (baseWidth / 3);
+    let height: number | undefined = widget.size.height * (baseWidth / 3);
+    if (widget.type === 'text' || widget.type === 'header') {
+      // Allow text widgets to size based on content
+      height = undefined;
+    }
     
     return { width, height };
   };
