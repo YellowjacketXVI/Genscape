@@ -8,87 +8,42 @@ type TextWidgetProps = {
     content?: {
       body: string;
     };
-    fontSize?: 12 | 24 | 32;
+    fontSize?: 'header' | 'subheader' | 'body';
     bold?: boolean;
   };
   isEditing: boolean;
   onUpdate?: (updatedWidget: any) => void;
 };
 
-export default function TextWidget({ widget, isEditing, onUpdate }: TextWidgetProps) {
-  const [text, setText] = useState(widget.content?.body || '');
-  const [fontSize, setFontSize] = useState<12 | 24 | 32>(widget.fontSize || 24);
-  const [bold, setBold] = useState(widget.bold || false);
+export default function TextWidget({ widget, onUpdate }: TextWidgetProps) {
+  const [text, setText] = useState(widget.content?.body || 'Double click to edit this text');
+  const [editing, setEditing] = useState(false);
 
-  const updateWidget = (updates: Partial<TextWidgetProps['widget']>) => {
+  const handleDoubleClick = () => setEditing(true);
+
+  const handleBlur = (e: React.FocusEvent<HTMLDivElement>) => {
+    const newText = e.currentTarget.innerText;
+    setEditing(false);
+    setText(newText);
     if (onUpdate) {
       onUpdate({
         ...widget,
-        ...updates,
-        content: { body: updates.content?.body ?? text },
+        content: { body: newText },
       });
     }
   };
 
-  const handleTextChange = (value: string) => {
-    setText(value);
-    updateWidget({ content: { body: value } });
-  };
-
-  const handleFontSizeChange = (value: 12 | 24 | 32) => {
-    setFontSize(value);
-    updateWidget({ fontSize: value });
-  };
-
-  const handleBoldChange = (value: boolean) => {
-    setBold(value);
-    updateWidget({ bold: value });
-  };
-
-  if (isEditing) {
-    return (
-      <div className="text-widget editing" style={{ backgroundColor: '#f0f0f0', padding: 8 }}>
-        <textarea
-          value={text}
-          onChange={(e) => handleTextChange(e.target.value)}
-          style={{
-            width: '100%',
-            minHeight: 80,
-            fontSize,
-            fontWeight: bold ? 'bold' as const : 'normal' as const,
-            backgroundColor: '#fff',
-            color: '#000',
-            borderRadius: 4,
-          }}
-        />
-        <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <select value={fontSize} onChange={(e) => handleFontSizeChange(Number(e.target.value) as 12 | 24 | 32)}>
-            <option value={12}>12</option>
-            <option value={24}>24</option>
-            <option value={32}>32</option>
-          </select>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <input
-              type="checkbox"
-              checked={bold}
-              onChange={(e) => handleBoldChange(e.target.checked)}
-            />
-            Bold
-          </label>
-        </div>
-      </div>
-    );
-  }
+  const fontClass = widget.fontSize || 'body';
 
   return (
-    <p
-      style={{
-        fontSize,
-        fontWeight: bold ? 'bold' : 'normal',
-        color: '#FFFFFF',
-      }}
+    <div
+      className={`text-widget ${fontClass}`}
+      contentEditable={editing}
+      suppressContentEditableWarning
+      onDoubleClick={handleDoubleClick}
+      onBlur={handleBlur}
     >
-      {text || ' '}
-    </p>
+      {text}
+    </div>
   );
 }

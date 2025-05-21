@@ -94,7 +94,7 @@ export type TextWidget = BaseWidget & {
   };
   style: 'normal' | 'highlight' | 'card';
   linkedMediaId?: string; // For header widgets that display media filename
-  fontSize?: 12 | 24 | 32;
+  fontSize?: 'header' | 'subheader' | 'body';
   bold?: boolean;
 };
 
