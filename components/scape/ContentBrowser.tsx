@@ -4,6 +4,7 @@ import AppContainer from '@/components/layout/AppContainer';
 import { X } from 'lucide-react-native';
 import MediaItem from '@/components/media/MediaItem';
 import Colors from '@/constants/Colors';
+import { getTestUserMedia } from '@/utils/mediaAssets';
 
 type ContentBrowserProps = {
   visible: boolean;
@@ -12,47 +13,12 @@ type ContentBrowserProps = {
   widgetType: string;
 };
 
-// Mock media data
-const MOCK_MEDIA = [
-  {
-    id: 'media-1',
-    type: 'image',
-    title: 'Landscape 1',
-    thumbnail: 'https://images.pexels.com/photos/1366957/pexels-photo-1366957.jpeg',
-    dateCreated: '2023-05-15',
-  },
-  {
-    id: 'media-2',
-    type: 'image',
-    title: 'Cityscape',
-    thumbnail: 'https://images.pexels.com/photos/3052361/pexels-photo-3052361.jpeg',
-    dateCreated: '2023-06-22',
-  },
-  {
-    id: 'media-3',
-    type: 'image',
-    title: 'Abstract Art',
-    thumbnail: 'https://images.pexels.com/photos/3721941/pexels-photo-3721941.jpeg',
-    dateCreated: '2023-07-10',
-  },
-  {
-    id: 'audio-1',
-    type: 'audio',
-    title: 'Ambient Track',
-    thumbnail: null,
-    dateCreated: '2023-08-05',
-  },
-  {
-    id: 'video-1',
-    type: 'video',
-    title: 'Motion Graphics',
-    thumbnail: 'https://images.pexels.com/photos/1209843/pexels-photo-1209843.jpeg',
-    dateCreated: '2023-09-18',
-  },
-];
+// Load media from local assets
+const MOCK_MEDIA = getTestUserMedia();
 
 export default function ContentBrowser({ visible, onClose, onSelect, widgetType }: ContentBrowserProps) {
   const [activeTab, setActiveTab] = useState('all');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // Filter media based on widget type and active tab
   const getFilteredMedia = () => {
@@ -70,7 +36,9 @@ export default function ContentBrowser({ visible, onClose, onSelect, widgetType 
     // Apply tab filters
     if (activeTab === 'recent') {
       // Sort by date, most recent first
-      filteredMedia.sort((a, b) => new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime());
+      filteredMedia.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
     } else if (activeTab !== 'all') {
       // Filter by media type
       filteredMedia = filteredMedia.filter(media => media.type === activeTab);
@@ -87,8 +55,13 @@ export default function ContentBrowser({ visible, onClose, onSelect, widgetType 
       preview: item.thumbnail || '',
     };
 
+    const isSelected = selectedId === item.id;
+
     return (
-      <TouchableOpacity style={styles.mediaItem} onPress={() => onSelect(item.id)}>
+      <TouchableOpacity
+        style={[styles.mediaItem, isSelected && styles.selectedItem]}
+        onPress={() => setSelectedId(item.id)}
+      >
         <MediaItem item={mappedItem} />
       </TouchableOpacity>
     );
@@ -154,6 +127,17 @@ export default function ContentBrowser({ visible, onClose, onSelect, widgetType 
           numColumns={3}
           contentContainerStyle={styles.mediaList}
         />
+        {selectedId && (
+          <TouchableOpacity
+            style={styles.confirmButton}
+            onPress={() => {
+              onSelect(selectedId);
+              setSelectedId(null);
+            }}
+          >
+            <Text style={styles.confirmText}>Confirm</Text>
+          </TouchableOpacity>
+        )}
       </View>
       </AppContainer>
     </Modal>
@@ -219,6 +203,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: 'hidden',
   },
+  selectedItem: {
+    borderWidth: 2,
+    borderColor: Colors.primary,
+  },
   mediaThumbnail: {
     width: '100%',
     height: 100,
@@ -244,5 +232,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingBottom: 8,
     textTransform: 'capitalize',
+  },
+  confirmButton: {
+    marginTop: 8,
+    marginHorizontal: 16,
+    paddingVertical: 12,
+    alignItems: 'center',
+    backgroundColor: Colors.primary,
+    borderRadius: 8,
+  },
+  confirmText: {
+    fontFamily: 'Inter-Bold',
+    color: '#FFF',
+    fontSize: 16,
   },
 });

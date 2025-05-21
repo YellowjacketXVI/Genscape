@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import SlidePanel from '@/components/layout/SlidePanel';
+import { getTestUserMediaById } from '@/utils/mediaAssets';
 
 export default function ContentDetail() {
   const router = useRouter();
@@ -28,28 +29,28 @@ export default function ContentDetail() {
   useEffect(() => {
     if (!id) return;
     
-    const fetchMedia = async () => {
+    const fetchMedia = () => {
       setLoading(true);
       try {
-        // Replace with actual API call
-        const response = await fetch(`/api/media/${id}`);
-        const data = await response.json();
-        setMedia(data);
-        setEditData({
-          title: data.title || '',
-          description: data.description || '',
-          tags: data.tags || [],
-          permissions: data.permissions || {
-            genGuard: false,
-            datasetReuse: false,
-            contentWarnings: {
-              suggestive: false,
-              political: false,
+        const data = getTestUserMediaById(id as string);
+        if (data) {
+          setMedia(data);
+          setEditData({
+            title: data.title || '',
+            description: data.description || '',
+            tags: data.tags || [],
+            permissions: data.permissions || {
+              genGuard: false,
+              datasetReuse: false,
+              contentWarnings: {
+                suggestive: false,
+                political: false,
               violent: false,
               nudity: false,
             },
           },
-        });
+          });
+        }
       } catch (error) {
         console.error('Error fetching media:', error);
       } finally {
@@ -60,46 +61,24 @@ export default function ContentDetail() {
     fetchMedia();
   }, [id]);
 
-  const handleSave = async () => {
-    try {
-      // Replace with actual API call
-      await fetch(`/api/media/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(editData),
-      });
-      
-      // Update local state
-      setMedia({
-        ...media,
-        title: editData.title,
-        description: editData.description,
-        tags: editData.tags,
-        permissions: editData.permissions,
-      });
-      
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Error updating media:', error);
-    }
+  const handleSave = () => {
+    // Update local state only
+    setMedia({
+      ...media,
+      title: editData.title,
+      description: editData.description,
+      tags: editData.tags,
+      permissions: editData.permissions,
+    });
+
+    setIsEditing(false);
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!confirm('Are you sure you want to delete this media?')) return;
-    
-    try {
-      // Replace with actual API call
-      await fetch(`/api/media/${id}`, {
-        method: 'DELETE',
-      });
-      
-      // Navigate back to content manager
-      router.push('/content');
-    } catch (error) {
-      console.error('Error deleting media:', error);
-    }
+
+    // Navigate back to content manager
+    router.push('/content');
   };
 
   if (loading || !media) {

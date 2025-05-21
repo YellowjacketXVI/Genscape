@@ -4,6 +4,7 @@ import BottomNav from '@/components/layout/BottomNav';
 import MediaGrid from '@/components/Content/MediaGrid';
 import UploadPanel from '@/components/Content/UploadPanel';
 import FileDetailsPanel from '@/components/Content/FileDetailsPanel';
+import { getTestUserMedia } from '@/utils/mediaAssets';
 
 export default function ContentManager() {
   const router = useRouter();
@@ -34,12 +35,10 @@ export default function ContentManager() {
 
   // Fetch content data
   useEffect(() => {
-    const fetchContent = async () => {
+    const fetchContent = () => {
       setLoading(true);
       try {
-        // Replace with actual API call
-        const response = await fetch('/api/content');
-        const data = await response.json();
+        const data = getTestUserMedia();
         setContentItems(data);
       } catch (error) {
         console.error('Error fetching content:', error);
@@ -47,7 +46,7 @@ export default function ContentManager() {
         setLoading(false);
       }
     };
-    
+
     fetchContent();
   }, []);
 

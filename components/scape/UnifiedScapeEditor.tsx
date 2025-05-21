@@ -8,7 +8,7 @@ import {
   Platform,
   Modal
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   Plus,
@@ -44,6 +44,7 @@ export default function UnifiedScapeEditor({
   onCancel
 }: UnifiedScapeEditorProps) {
   const router = useRouter();
+  const params = useLocalSearchParams();
 
   // Default empty scape if none provided
   const defaultScape = {
@@ -64,6 +65,7 @@ export default function UnifiedScapeEditor({
     reorderWidgets,
     setFeaturedWidget,
     setWidgetChannel,
+    getWidgetById,
   } = useWidgetManager(initialScape?.widgets || []);
   const [editMode, setEditMode] = useState(true);
   const [showContentBrowser, setShowContentBrowser] = useState(false);
@@ -84,9 +86,22 @@ export default function UnifiedScapeEditor({
     }
   }, [initialScape]);
 
+  // Check for new widget returned from selector
+  useEffect(() => {
+    if (params.newWidget) {
+      try {
+        const newWidgetData = JSON.parse(decodeURIComponent(params.newWidget as string));
+        addWidget(newWidgetData as Widget);
+        router.setParams({});
+      } catch (error) {
+        console.error('Error parsing widget data:', error);
+      }
+    }
+  }, [params.newWidget]);
+
   const handleAddWidget = () => {
     // Navigate to widget selector
-    router.push('/scape-edit/widget-selector');
+    router.push({ pathname: '/scape-edit/widget-selector', params: { scapeId: scape.id } });
   };
 
   const handleWidgetPress = (widget: any) => {
@@ -420,9 +435,26 @@ export default function UnifiedScapeEditor({
         onClose={() => setShowContentBrowser(false)}
         onSelect={(mediaId) => {
           if (selectedWidget) {
-            // Update the widget with the selected media
-            const mediaIds = selectedWidget.mediaIds ? [...selectedWidget.mediaIds, mediaId] : [mediaId];
-            updateWidget(selectedWidget.id, { mediaIds });
+            const current = getWidgetById(selectedWidget.id) as any;
+            if (!current) return;
+            let updates: any = {};
+            switch (current.type) {
+              case 'media':
+                updates.mediaIds = current.mediaIds ? [...current.mediaIds, mediaId] : [mediaId];
+                break;
+              case 'gallery':
+                updates.items = current.items ? [...current.items, { id: `item-${Date.now()}`, mediaId }] : [{ id: `item-${Date.now()}`, mediaId }];
+                break;
+              case 'shop':
+                updates.products = current.products ? [...current.products, { id: `product-${Date.now()}`, mediaId, name: '', price: 0, available: true }] : [{ id: `product-${Date.now()}`, mediaId, name: '', price: 0, available: true }];
+                break;
+              case 'audio':
+                updates.tracks = current.tracks ? [...current.tracks, { id: `track-${Date.now()}`, mediaId, title: '', artist: '', duration: 0 }] : [{ id: `track-${Date.now()}`, mediaId, title: '', artist: '', duration: 0 }];
+                break;
+              default:
+                break;
+            }
+            updateWidget(selectedWidget.id, updates);
             setSelectedWidget(null);
             setShowContentBrowser(false);
           }
