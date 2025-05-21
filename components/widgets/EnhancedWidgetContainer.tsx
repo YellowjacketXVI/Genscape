@@ -13,6 +13,7 @@ import {
 } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 import { Widget, getWidgetSizeName } from '@/types/widget';
+import { getWidgetComponent } from '@/utils/widgetRegistry';
 
 interface WidgetContainerProps {
   widget: Widget;
@@ -91,6 +92,9 @@ export default function EnhancedWidgetContainer({
   };
   
   const dimensions = calculateDimensions();
+
+  // Resolve the actual widget component for rendering
+  const WidgetComponent = getWidgetComponent(widget.type);
   
   return (
     <View style={[
@@ -170,13 +174,21 @@ export default function EnhancedWidgetContainer({
         activeOpacity={isEditing ? 0.7 : 1}
         disabled={!isEditing || !onMediaSelect}
       >
-        <View style={styles.placeholderContainer}>
-          <View style={styles.iconContainer}>{getWidgetIcon()}</View>
-          <Text style={styles.placeholderTitle}>{widget.title || widget.type}</Text>
-          <Text style={styles.placeholderDescription}>
-            {isEditing ? 'Tap to add content' : 'Widget preview'}
-          </Text>
-        </View>
+        {WidgetComponent ? (
+          <WidgetComponent
+            widget={widget as any}
+            isEditing={isEditing}
+            onMediaSelect={onMediaSelect}
+          />
+        ) : (
+          <View style={styles.placeholderContainer}>
+            <View style={styles.iconContainer}>{getWidgetIcon()}</View>
+            <Text style={styles.placeholderTitle}>{widget.title || widget.type}</Text>
+            <Text style={styles.placeholderDescription}>
+              {isEditing ? 'Tap to add content' : 'Widget preview'}
+            </Text>
+          </View>
+        )}
         
         {/* Add content overlay - only shown in editing mode */}
         {isEditing && onMediaSelect && (
