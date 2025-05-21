@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getTestUserMediaById } from '@/utils/mediaAssets';
 
 type ImageWidgetProps = {
   widget: {
@@ -29,24 +30,22 @@ export default function ImageWidget({
 
   // Fetch media data when mediaIds change
   useEffect(() => {
-    const fetchMedia = async () => {
+    const fetchMedia = () => {
       if (!widget.mediaIds || widget.mediaIds.length === 0) {
         setMedia(null);
         return;
       }
-      
+
       try {
-        // Replace with actual API call
-        const response = await fetch(`/api/media/${widget.mediaIds[0]}`);
-        const data = await response.json();
+        const data = getTestUserMediaById(widget.mediaIds[0]);
         setMedia(data);
-        setHasError(false);
+        setHasError(!data);
       } catch (error) {
         console.error('Error fetching media:', error);
         setHasError(true);
       }
     };
-    
+
     fetchMedia();
   }, [widget.mediaIds]);
 

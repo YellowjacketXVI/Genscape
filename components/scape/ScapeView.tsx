@@ -17,6 +17,11 @@ import { Scape } from '@/types/scape';
 import { Widget } from '@/types/widget';
 import StyledWidgetContainer from '@/components/widgets/StyledWidgetContainer';
 import LiveWidget from '@/components/widgets/LiveWidget';
+import ImageWidget from '@/components/scape/widgets/ImageWidget';
+import GalleryWidget from '@/components/scape/widgets/GalleryWidget';
+import AudioWidget from '@/components/scape/widgets/AudioWidget';
+import ShopWidget from '@/components/scape/widgets/ShopWidget';
+import TextWidget from '@/components/scape/widgets/TextWidget';
 
 interface ScapeViewProps {
   scape: Scape;
@@ -85,6 +90,31 @@ export default function ScapeView({
     const channelColor = getChannelColor(widget.channel);
     const size = widget.size.width === 1 ? 'sm' : widget.size.width === 2 ? 'md' : 'lg';
 
+    const content = (() => {
+      switch (widget.type) {
+        case 'media':
+          return <ImageWidget widget={widget} isEditing={false} />;
+        case 'gallery':
+          return <GalleryWidget widget={widget} isEditing={false} />;
+        case 'audio':
+          return <AudioWidget widget={widget} isEditing={false} />;
+        case 'shop':
+          return <ShopWidget widget={widget} isEditing={false} onMediaSelect={() => {}} />;
+        case 'text':
+        case 'header':
+          return <TextWidget widget={widget} isEditing={false} />;
+        case 'live':
+          return <LiveWidget size={size as 'sm' | 'md' | 'lg'} isLive duration="00:00" comments={[]} />;
+        default:
+          return (
+            <StyledWidgetContainer
+              widget={widget}
+              onPress={() => onWidgetPress && onWidgetPress(widget)}
+            />
+          );
+      }
+    })();
+
     return (
       <View
         key={widget.id}
@@ -96,14 +126,7 @@ export default function ScapeView({
           },
         ]}
       >
-        {widget.type === 'live' ? (
-          <LiveWidget size={size as 'sm' | 'md' | 'lg'} isLive duration="00:00" comments={[]} />
-        ) : (
-          <StyledWidgetContainer
-            widget={widget}
-            onPress={() => onWidgetPress && onWidgetPress(widget)}
-          />
-        )}
+        {content}
       </View>
     );
   };

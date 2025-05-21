@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getTestUserMediaById } from '@/utils/mediaAssets';
 
 type AudioTrack = {
   id: string;
@@ -48,29 +49,22 @@ export default function AudioWidget({
       try {
         // In a real app, this would be an API call to fetch audio details
         // For now, we'll just add audio URLs to the tracks
-        const updatedTracks = await Promise.all(
-          widget.tracks.map(async (track) => {
-            if (!track.mediaId) {
-              return { ...track, audioUrl: undefined };
-            }
-            
-            try {
-              // Mock API call - would be replaced with actual API
-              // const response = await fetch(`/api/media/${track.mediaId}`);
-              // const data = await response.json();
-              // return { ...track, audioUrl: data.url };
-              
-              // For now, just use a placeholder
-              return { 
-                ...track, 
-                audioUrl: `#audio-placeholder-${track.id}` 
-              };
-            } catch (error) {
-              console.error(`Error fetching media for track ${track.id}:`, error);
-              return { ...track, audioUrl: undefined };
-            }
-          })
-        );
+        const updatedTracks = widget.tracks.map((track) => {
+          if (!track.mediaId) {
+            return { ...track, audioUrl: undefined };
+          }
+
+          try {
+            const media = getTestUserMediaById(track.mediaId);
+            return {
+              ...track,
+              audioUrl: media ? media.url : undefined,
+            };
+          } catch (error) {
+            console.error(`Error fetching media for track ${track.id}:`, error);
+            return { ...track, audioUrl: undefined };
+          }
+        });
         
         setTracks(updatedTracks);
         

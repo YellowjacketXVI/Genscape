@@ -4,6 +4,7 @@ import AppContainer from '@/components/layout/AppContainer';
 import { X } from 'lucide-react-native';
 import MediaItem from '@/components/media/MediaItem';
 import Colors from '@/constants/Colors';
+import { getTestUserMedia } from '@/utils/mediaAssets';
 
 type ContentBrowserProps = {
   visible: boolean;
@@ -12,44 +13,8 @@ type ContentBrowserProps = {
   widgetType: string;
 };
 
-// Mock media data
-const MOCK_MEDIA = [
-  {
-    id: 'media-1',
-    type: 'image',
-    title: 'Landscape 1',
-    thumbnail: 'https://images.pexels.com/photos/1366957/pexels-photo-1366957.jpeg',
-    dateCreated: '2023-05-15',
-  },
-  {
-    id: 'media-2',
-    type: 'image',
-    title: 'Cityscape',
-    thumbnail: 'https://images.pexels.com/photos/3052361/pexels-photo-3052361.jpeg',
-    dateCreated: '2023-06-22',
-  },
-  {
-    id: 'media-3',
-    type: 'image',
-    title: 'Abstract Art',
-    thumbnail: 'https://images.pexels.com/photos/3721941/pexels-photo-3721941.jpeg',
-    dateCreated: '2023-07-10',
-  },
-  {
-    id: 'audio-1',
-    type: 'audio',
-    title: 'Ambient Track',
-    thumbnail: null,
-    dateCreated: '2023-08-05',
-  },
-  {
-    id: 'video-1',
-    type: 'video',
-    title: 'Motion Graphics',
-    thumbnail: 'https://images.pexels.com/photos/1209843/pexels-photo-1209843.jpeg',
-    dateCreated: '2023-09-18',
-  },
-];
+// Load media from local assets
+const MOCK_MEDIA = getTestUserMedia();
 
 export default function ContentBrowser({ visible, onClose, onSelect, widgetType }: ContentBrowserProps) {
   const [activeTab, setActiveTab] = useState('all');
@@ -70,7 +35,9 @@ export default function ContentBrowser({ visible, onClose, onSelect, widgetType 
     // Apply tab filters
     if (activeTab === 'recent') {
       // Sort by date, most recent first
-      filteredMedia.sort((a, b) => new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime());
+      filteredMedia.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
     } else if (activeTab !== 'all') {
       // Filter by media type
       filteredMedia = filteredMedia.filter(media => media.type === activeTab);

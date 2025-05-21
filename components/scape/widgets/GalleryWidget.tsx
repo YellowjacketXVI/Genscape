@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getTestUserMediaById } from '@/utils/mediaAssets';
 
 type GalleryItem = {
   id: string;
@@ -32,35 +33,23 @@ export default function GalleryWidget({
 
   // Fetch media data for all items
   useEffect(() => {
-    const fetchMediaItems = async () => {
+    const fetchMediaItems = () => {
       if (!widget.items || widget.items.length === 0) {
         return;
       }
-      
+
       setLoading(true);
-      
+
       try {
-        // Create a copy of items to update with URLs
-        const updatedItems = [...widget.items];
-        
-        // Fetch each media item
-        for (let i = 0; i < updatedItems.length; i++) {
-          const item = updatedItems[i];
-          
-          // Skip if no mediaId
-          if (!item.mediaId) continue;
-          
-          // Replace with actual API call
-          const response = await fetch(`/api/media/${item.mediaId}`);
-          const data = await response.json();
-          
-          // Update item with URL
-          updatedItems[i] = {
+        const updatedItems = widget.items.map((item) => {
+          if (!item.mediaId) return item;
+          const media = getTestUserMediaById(item.mediaId);
+          return {
             ...item,
-            url: data.url,
+            url: media ? media.url : undefined,
           };
-        }
-        
+        });
+
         setGalleryItems(updatedItems);
       } catch (error) {
         console.error('Error fetching gallery media:', error);
@@ -68,7 +57,7 @@ export default function GalleryWidget({
         setLoading(false);
       }
     };
-    
+
     fetchMediaItems();
   }, [widget.items]);
 
