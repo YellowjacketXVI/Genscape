@@ -1,0 +1,38 @@
+:root {
+  --text-header: 2rem;
+  --text-subheader: 1.5rem;
+  --text-body: 1rem;
+  --text-color: #ffffff;
+  --text-bg: transparent;
+}
+
+.text-widget {
+  font-family: system-ui, sans-serif;
+  background-color: var(--text-bg);
+  color: var(--text-color);
+  padding: 0.5rem;
+  border: none;
+  outline: none;
+  width: 100%;
+  user-select: text;
+  cursor: text;
+}
+
+.text-widget.header {
+  font-size: var(--text-header);
+  font-weight: bold;
+}
+
+.text-widget.subheader {
+  font-size: var(--text-subheader);
+  font-weight: 600;
+}
+
+.text-widget.body {
+  font-size: var(--text-body);
+  font-weight: normal;
+}
+
+.text-widget.bold {
+  font-weight: bold;
+}

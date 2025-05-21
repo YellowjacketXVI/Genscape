@@ -2,6 +2,7 @@ import { StyleSheet, View, TouchableOpacity, Text, Dimensions, Platform } from '
 import { Widget } from '@/types/widget';
 import Colors from '@/constants/Colors';
 import { Image, Music, ShoppingBag, MessageSquare, Text as TextIcon, Bot } from 'lucide-react-native';
+import { getWidgetComponent } from '@/utils/widgetRegistry';
 
 type Props = {
   widget: Widget;
@@ -27,8 +28,8 @@ export default function WidgetContainer({ widget, onMediaSelect, isEditing = fal
     onSizeChange(newWidth);
   };
 
-  // Temporary placeholder component until we implement the actual widget components
-  const getWidgetComponent = () => {
+  // Render the placeholder when no specific widget component exists
+  const renderPlaceholder = () => {
     const getIcon = () => {
       switch (widget.type) {
         case 'media':
@@ -64,6 +65,9 @@ export default function WidgetContainer({ widget, onMediaSelect, isEditing = fal
       </View>
     );
   };
+
+  // Resolve the actual widget component based on type
+  const WidgetComponent = getWidgetComponent(widget.type);
 
   const getWidgetWidth = () => {
     const baseWidth = 100 / 3; // For 3-column layout
@@ -155,7 +159,15 @@ export default function WidgetContainer({ widget, onMediaSelect, isEditing = fal
             isEditing && styles.editingWidget
           ]}
         >
-          {getWidgetComponent()}
+          {WidgetComponent ? (
+            <WidgetComponent
+              widget={widget as any}
+              isEditing={isEditing}
+              onMediaSelect={onMediaSelect}
+            />
+          ) : (
+            renderPlaceholder()
+          )}
 
           {/* Add content overlay - only shown in editing mode */}
           {isEditing && (
