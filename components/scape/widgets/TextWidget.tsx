@@ -8,7 +8,9 @@ type TextWidgetProps = {
     content?: {
       body: string;
     };
-    fontSize?: 'header' | 'subheader' | 'body';
+    /** Font size in pixels */
+    fontSize?: 12 | 24 | 32;
+    /** Whether the text should be bold */
     bold?: boolean;
   };
   isEditing: boolean;
@@ -33,11 +35,19 @@ export default function TextWidget({ widget, onUpdate }: TextWidgetProps) {
     }
   };
 
-  const fontClass = widget.fontSize || 'body';
+  const fontSize = widget.fontSize ?? 12;
 
   return (
     <div
-      className={`text-widget ${fontClass}`}
+      className="text-widget"
+      style={{
+        paddingTop: 8,
+        paddingBottom: 8,
+        color: '#FFFFFF',
+        fontWeight: widget.bold ? 'bold' : 'normal',
+        fontSize,
+        width: '100%',
+      }}
       contentEditable={editing}
       suppressContentEditableWarning
       onDoubleClick={handleDoubleClick}
