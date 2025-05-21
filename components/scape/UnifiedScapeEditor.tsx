@@ -392,6 +392,8 @@ export default function UnifiedScapeEditor({
                     onMediaSelect={() => handleWidgetPress(widget)}
                     isEditing={editMode}
                     onSizeChange={(newWidth) => handleWidgetSizeChange(widget.id, newWidth)}
+                    onRemove={() => handleDeleteWidget(widget.id)}
+                    onFeatureToggle={() => toggleFeaturedWidget(widget.id)}
                   />
                 </View>
               </DraggableWidgetWrapper>
