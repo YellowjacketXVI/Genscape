@@ -6,147 +6,89 @@ type TextWidgetProps = {
     type: 'text' | 'header';
     title: string;
     content?: {
-      header?: string;
-      title?: string;
       body: string;
-      tags?: string[];
     };
-    style?: 'normal' | 'highlight' | 'card';
-    linkedMediaId?: string;
+    fontSize?: 12 | 24 | 32;
+    bold?: boolean;
   };
   isEditing: boolean;
   onUpdate?: (updatedWidget: any) => void;
 };
 
 export default function TextWidget({ widget, isEditing, onUpdate }: TextWidgetProps) {
-  const [editContent, setEditContent] = useState(widget.content || {
-    header: '',
-    title: '',
-    body: '',
-    tags: [],
-  });
+  const [text, setText] = useState(widget.content?.body || '');
+  const [fontSize, setFontSize] = useState<12 | 24 | 32>(widget.fontSize || 24);
+  const [bold, setBold] = useState(widget.bold || false);
 
-  const handleContentChange = (field: string, value: string) => {
-    const updatedContent = {
-      ...editContent,
-      [field]: value,
-    };
-    
-    setEditContent(updatedContent);
-    
+  const updateWidget = (updates: Partial<TextWidgetProps['widget']>) => {
     if (onUpdate) {
       onUpdate({
         ...widget,
-        content: updatedContent,
+        ...updates,
+        content: { body: updates.content?.body ?? text },
       });
     }
   };
 
-  const handleStyleChange = (style: 'normal' | 'highlight' | 'card') => {
-    if (onUpdate) {
-      onUpdate({
-        ...widget,
-        style,
-      });
-    }
+  const handleTextChange = (value: string) => {
+    setText(value);
+    updateWidget({ content: { body: value } });
   };
 
-  // Determine widget style class
-  const styleClass = widget.style || 'normal';
+  const handleFontSizeChange = (value: 12 | 24 | 32) => {
+    setFontSize(value);
+    updateWidget({ fontSize: value });
+  };
+
+  const handleBoldChange = (value: boolean) => {
+    setBold(value);
+    updateWidget({ bold: value });
+  };
 
   if (isEditing) {
     return (
-      <div className={`text-widget editing ${styleClass}`}>
-        <div className="widget-edit-header">
-          <h4>Edit Text Widget</h4>
-          
-          <div className="style-selector">
-            <button 
-              className={`style-button ${styleClass === 'normal' ? 'active' : ''}`}
-              onClick={() => handleStyleChange('normal')}
-            >
-              Normal
-            </button>
-            <button 
-              className={`style-button ${styleClass === 'highlight' ? 'active' : ''}`}
-              onClick={() => handleStyleChange('highlight')}
-            >
-              Highlight
-            </button>
-            <button 
-              className={`style-button ${styleClass === 'card' ? 'active' : ''}`}
-              onClick={() => handleStyleChange('card')}
-            >
-              Card
-            </button>
-          </div>
-        </div>
-        
-        <div className="widget-edit-content">
-          {widget.type === 'header' && (
-            <div className="form-group">
-              <label htmlFor="header">Header</label>
-              <input 
-                type="text" 
-                id="header" 
-                value={editContent.header || ''} 
-                onChange={(e) => handleContentChange('header', e.target.value)} 
-                placeholder="Header text" 
-              />
-            </div>
-          )}
-          
-          <div className="form-group">
-            <label htmlFor="title">Title</label>
-            <input 
-              type="text" 
-              id="title" 
-              value={editContent.title || ''} 
-              onChange={(e) => handleContentChange('title', e.target.value)} 
-              placeholder="Title" 
+      <div className="text-widget editing" style={{ backgroundColor: '#f0f0f0', padding: 8 }}>
+        <textarea
+          value={text}
+          onChange={(e) => handleTextChange(e.target.value)}
+          style={{
+            width: '100%',
+            minHeight: 80,
+            fontSize,
+            fontWeight: bold ? 'bold' as const : 'normal' as const,
+            backgroundColor: '#fff',
+            color: '#000',
+            borderRadius: 4,
+          }}
+        />
+        <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <select value={fontSize} onChange={(e) => handleFontSizeChange(Number(e.target.value) as 12 | 24 | 32)}>
+            <option value={12}>12</option>
+            <option value={24}>24</option>
+            <option value={32}>32</option>
+          </select>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <input
+              type="checkbox"
+              checked={bold}
+              onChange={(e) => handleBoldChange(e.target.checked)}
             />
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="body">Content</label>
-            <textarea 
-              id="body" 
-              value={editContent.body || ''} 
-              onChange={(e) => handleContentChange('body', e.target.value)} 
-              placeholder="Enter your text here..." 
-              rows={5}
-            />
-          </div>
+            Bold
+          </label>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`text-widget ${styleClass}`}>
-      {editContent.header && (
-        <div className="widget-header">{editContent.header}</div>
-      )}
-      
-      {editContent.title && (
-        <h3 className="widget-title">{editContent.title}</h3>
-      )}
-      
-      <div className="widget-body">
-        {editContent.body ? (
-          <p>{editContent.body}</p>
-        ) : (
-          <p className="empty-content">No content</p>
-        )}
-      </div>
-      
-      {editContent.tags && editContent.tags.length > 0 && (
-        <div className="widget-tags">
-          {editContent.tags.map((tag, index) => (
-            <span key={index} className="tag">#{tag}</span>
-          ))}
-        </div>
-      )}
-    </div>
+    <p
+      style={{
+        fontSize,
+        fontWeight: bold ? 'bold' : 'normal',
+        color: '#FFFFFF',
+      }}
+    >
+      {text || ' '}
+    </p>
   );
 }

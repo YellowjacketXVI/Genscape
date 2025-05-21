@@ -25,8 +25,7 @@ export default function ImageWidget({
   const [media, setMedia] = useState<any>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const [editCaption, setEditCaption] = useState(widget.caption || '');
-  const [editAltText, setEditAltText] = useState(widget.altText || '');
+  // Media widgets are simplified: no caption or alt text display
 
   // Fetch media data when mediaIds change
   useEffect(() => {
@@ -57,27 +56,7 @@ export default function ImageWidget({
     setHasError(true);
   };
 
-  const handleCaptionChange = (value: string) => {
-    setEditCaption(value);
-    
-    if (onUpdate) {
-      onUpdate({
-        ...widget,
-        caption: value,
-      });
-    }
-  };
-
-  const handleAltTextChange = (value: string) => {
-    setEditAltText(value);
-    
-    if (onUpdate) {
-      onUpdate({
-        ...widget,
-        altText: value,
-      });
-    }
-  };
+  // Caption and alt text editing have been removed
 
   if (isEditing) {
     return (
@@ -89,10 +68,10 @@ export default function ImageWidget({
         <div className="widget-edit-content">
           <div className="media-preview" onClick={onMediaSelect}>
             {media ? (
-              <img 
-                src={media.url} 
-                alt={editAltText || 'Preview'} 
-                className="preview-image" 
+              <img
+                src={media.url}
+                alt="Preview"
+                className="preview-image"
               />
             ) : (
               <div className="empty-media">
@@ -106,27 +85,7 @@ export default function ImageWidget({
             )}
           </div>
           
-          <div className="form-group">
-            <label htmlFor="caption">Caption</label>
-            <input 
-              type="text" 
-              id="caption" 
-              value={editCaption} 
-              onChange={(e) => handleCaptionChange(e.target.value)} 
-              placeholder="Add a caption" 
-            />
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="altText">Alt Text (for accessibility)</label>
-            <input 
-              type="text" 
-              id="altText" 
-              value={editAltText} 
-              onChange={(e) => handleAltTextChange(e.target.value)} 
-              placeholder="Describe the image for screen readers" 
-            />
-          </div>
+          {/* Media widgets have no caption or alt text */}
         </div>
       </div>
     );
@@ -151,18 +110,22 @@ export default function ImageWidget({
         </div>
       ) : media ? (
         <>
-          <img 
-            src={media.url} 
-            alt={widget.altText || widget.caption || 'Image'} 
-            className={`widget-image ${isLoaded ? 'loaded' : ''}`}
-            onLoad={handleImageLoad}
-            onError={handleImageError}
-          />
-          
-          {widget.caption && (
-            <div className="widget-caption">
-              <p>{widget.caption}</p>
-            </div>
+          {media.type === 'video' ? (
+            <video
+              src={media.url}
+              className="widget-video"
+              controls
+              onLoadedData={handleImageLoad}
+              onError={handleImageError}
+            />
+          ) : (
+            <img
+              src={media.url}
+              alt="Media"
+              className={`widget-image ${isLoaded ? 'loaded' : ''}`}
+              onLoad={handleImageLoad}
+              onError={handleImageError}
+            />
           )}
         </>
       ) : (
