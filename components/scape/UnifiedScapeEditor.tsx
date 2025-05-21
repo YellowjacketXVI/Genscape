@@ -8,7 +8,7 @@ import {
   Platform,
   Modal
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   Plus,
@@ -54,6 +54,7 @@ export default function UnifiedScapeEditor({
   };
 
   const [scape, setScape] = useState(initialScape || defaultScape);
+  const params = useLocalSearchParams();
   const {
     widgets,
     addWidget,
@@ -84,9 +85,27 @@ export default function UnifiedScapeEditor({
     }
   }, [initialScape]);
 
+  // If returning from the widget selector with a new widget, add it
+  useEffect(() => {
+    if (params.newWidget) {
+      try {
+        const newWidget = JSON.parse(decodeURIComponent(params.newWidget as string));
+        addWidget(newWidget as Widget);
+      } catch (err) {
+        console.error('Error parsing new widget:', err);
+      } finally {
+        router.setParams({});
+      }
+    }
+  }, [params.newWidget]);
+
   const handleAddWidget = () => {
-    // Navigate to widget selector
-    router.push('/scape-edit/widget-selector');
+    // Navigate to widget selector with current scape id so the selector
+    // can return with the new widget data encoded in the URL params
+    router.push({
+      pathname: '/scape-edit/widget-selector',
+      params: { scapeId: scape.id }
+    });
   };
 
   const handleWidgetPress = (widget: any) => {
