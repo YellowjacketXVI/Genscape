@@ -73,6 +73,13 @@
   --font-size-xl: 20px;
   --font-size-xxl: 24px;
   --font-size-xxxl: 32px;
+
+  /* Text Widget */
+  --text-header: var(--font-size-xxxl);
+  --text-subheader: var(--font-size-xxl);
+  --text-body: var(--font-size-md);
+  --text-color: var(--color-text-primary);
+  --text-bg: transparent;
   
   /* Font Weights */
   --font-weight-regular: 400;
