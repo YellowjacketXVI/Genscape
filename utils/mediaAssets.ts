@@ -134,5 +134,16 @@ export const getTestUserMedia = () => {
 // Function to get a specific media item by ID
 export const getTestUserMediaById = (id: string) => {
   const allMedia = getTestUserMedia();
-  return allMedia.find(item => item.id === id) || null;
+
+  // Support legacy IDs used in mock scape data
+  let lookupId = id;
+  if (id.startsWith('media-')) {
+    lookupId = `img-${id.split('-')[1]}`;
+  } else if (id.startsWith('audio-')) {
+    lookupId = `aud-${id.split('-')[1]}`;
+  } else if (id.startsWith('video-')) {
+    lookupId = `vid-${id.split('-')[1]}`;
+  }
+
+  return allMedia.find(item => item.id === lookupId) || null;
 };

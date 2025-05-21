@@ -1,7 +1,6 @@
 import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
 import { Music, Video, Image as ImageIcon, Check } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
-import { useState } from 'react';
 
 type MediaItemProps = {
   item: {
@@ -10,14 +9,11 @@ type MediaItemProps = {
     name: string;
     preview: string;
   };
+  selected?: boolean;
+  onPress?: () => void;
 };
 
-export default function MediaItem({ item }: MediaItemProps) {
-  const [selected, setSelected] = useState(false);
-
-  const toggleSelect = () => {
-    setSelected(!selected);
-  };
+export default function MediaItem({ item, selected = false, onPress }: MediaItemProps) {
 
   const getTypeIcon = () => {
     switch (item.type) {
@@ -31,7 +27,7 @@ export default function MediaItem({ item }: MediaItemProps) {
   };
 
   return (
-    <TouchableOpacity style={styles.container} onPress={toggleSelect}>
+    <TouchableOpacity style={styles.container} onPress={onPress}>
       <View style={styles.preview}>
         <Image 
           source={{ uri: item.preview }} 

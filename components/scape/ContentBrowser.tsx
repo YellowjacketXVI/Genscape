@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, FlatList, Image, Modal, Dimensions, useWindowDimensions } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, FlatList, Modal, useWindowDimensions } from 'react-native';
 import AppContainer from '@/components/layout/AppContainer';
 import { X } from 'lucide-react-native';
 import MediaItem from '@/components/media/MediaItem';
@@ -18,6 +18,7 @@ const MOCK_MEDIA = getTestUserMedia();
 
 export default function ContentBrowser({ visible, onClose, onSelect, widgetType }: ContentBrowserProps) {
   const [activeTab, setActiveTab] = useState('all');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // Filter media based on widget type and active tab
   const getFilteredMedia = () => {
@@ -54,9 +55,13 @@ export default function ContentBrowser({ visible, onClose, onSelect, widgetType 
       preview: item.thumbnail || '',
     };
 
+    const handlePress = () => {
+      setSelectedId(item.id);
+    };
+
     return (
-      <TouchableOpacity style={styles.mediaItem} onPress={() => onSelect(item.id)}>
-        <MediaItem item={mappedItem} />
+      <TouchableOpacity style={styles.mediaItem} onPress={handlePress}>
+        <MediaItem item={mappedItem} selected={item.id === selectedId} onPress={handlePress} />
       </TouchableOpacity>
     );
   };
@@ -121,6 +126,21 @@ export default function ContentBrowser({ visible, onClose, onSelect, widgetType 
           numColumns={3}
           contentContainerStyle={styles.mediaList}
         />
+
+        <View style={styles.footer}>
+          <TouchableOpacity
+            style={[styles.confirmButton, !selectedId && styles.confirmButtonDisabled]}
+            disabled={!selectedId}
+            onPress={() => {
+              if (selectedId) {
+                onSelect(selectedId);
+                setSelectedId(null);
+              }
+            }}
+          >
+            <Text style={styles.confirmButtonText}>Confirm</Text>
+          </TouchableOpacity>
+        </View>
       </View>
       </AppContainer>
     </Modal>
@@ -211,5 +231,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingBottom: 8,
     textTransform: 'capitalize',
+  },
+  footer: {
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: Colors.background.medium,
+  },
+  confirmButton: {
+    backgroundColor: Colors.primary,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  confirmButtonDisabled: {
+    opacity: 0.5,
+  },
+  confirmButtonText: {
+    color: '#FFF',
+    fontFamily: 'Inter-Bold',
+    fontSize: 16,
   },
 });
