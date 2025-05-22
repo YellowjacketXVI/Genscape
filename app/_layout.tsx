@@ -6,6 +6,9 @@ import { useFonts, Inter_400Regular, Inter_500Medium, Inter_700Bold } from '@exp
 import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-gesture-handler'; // Import gesture handler
 import { ScapeProvider } from '@/context/ScapeContext';
+// Global styles for web widgets
+import '@/styles/theme.css';
+import '@/styles/components.css';
 
 // Keep splash screen visible while loading fonts
 SplashScreen.preventAutoHideAsync();
