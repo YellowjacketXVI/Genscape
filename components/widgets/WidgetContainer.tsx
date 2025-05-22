@@ -147,41 +147,75 @@ export default function WidgetContainer({ widget, onMediaSelect, isEditing = fal
         </TouchableOpacity>
       )}
 
-      <TouchableOpacity
-        style={styles.touchableArea}
-        onPress={onMediaSelect}
-        activeOpacity={0.8}
-      >
-        <View
-          style={[
-            styles.widgetContent,
-            {
-              width: dimensions.width,
-              height: dimensions.height
-            },
-            isEditing && styles.editingWidget
-          ]}
+      {onMediaSelect ? (
+        <TouchableOpacity
+          style={styles.touchableArea}
+          onPress={onMediaSelect}
+          activeOpacity={0.8}
         >
-          {WidgetComponent ? (
-            <WidgetComponent
-              widget={widget as any}
-              isEditing={isEditing}
-              onMediaSelect={onMediaSelect}
-            />
-          ) : (
-            renderPlaceholder()
-          )}
+          <View
+            style={[
+              styles.widgetContent,
+              {
+                width: dimensions.width,
+                height: dimensions.height
+              },
+              isEditing && styles.editingWidget
+            ]}
+          >
+            {WidgetComponent ? (
+              <WidgetComponent
+                widget={widget as any}
+                isEditing={isEditing}
+                onMediaSelect={onMediaSelect}
+              />
+            ) : (
+              renderPlaceholder()
+            )}
 
-          {/* Add content overlay - only shown in editing mode */}
-          {isEditing && (
-            <View style={styles.addContentOverlay}>
-              <View style={styles.addContentButton}>
-                <Text style={styles.addContentText}>Tap to add content</Text>
+            {/* Add content overlay - only shown in editing mode */}
+            {isEditing && (
+              <View style={styles.addContentOverlay}>
+                <View style={styles.addContentButton}>
+                  <Text style={styles.addContentText}>Tap to add content</Text>
+                </View>
               </View>
-            </View>
-          )}
+            )}
+          </View>
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.touchableArea}>
+          <View
+            style={[
+              styles.widgetContent,
+              {
+                width: dimensions.width,
+                height: dimensions.height
+              },
+              isEditing && styles.editingWidget
+            ]}
+          >
+            {WidgetComponent ? (
+              <WidgetComponent
+                widget={widget as any}
+                isEditing={isEditing}
+                onMediaSelect={onMediaSelect}
+              />
+            ) : (
+              renderPlaceholder()
+            )}
+
+            {/* Add content overlay - only shown in editing mode */}
+            {isEditing && (
+              <View style={styles.addContentOverlay}>
+                <View style={styles.addContentButton}>
+                  <Text style={styles.addContentText}>Tap to add content</Text>
+                </View>
+              </View>
+            )}
+          </View>
         </View>
-      </TouchableOpacity>
+      )}
     </View>
   );
 }

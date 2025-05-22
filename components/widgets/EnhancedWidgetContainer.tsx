@@ -167,42 +167,69 @@ export default function EnhancedWidgetContainer({
       )}
       
       {/* Widget Content */}
-      <TouchableOpacity
-        style={[
-          styles.widgetContent,
-          {
-            height: dimensions.height
-          }
-        ]}
-        onPress={onMediaSelect}
-        activeOpacity={isEditing ? 0.7 : 1}
-        disabled={!isEditing || !onMediaSelect}
-      >
-        {WidgetComponent ? (
-          <WidgetComponent
-            widget={widget as any}
-            isEditing={isEditing}
-            onMediaSelect={onMediaSelect}
-          />
-        ) : (
-          <View style={styles.placeholderContainer}>
-            <View style={styles.iconContainer}>{getWidgetIcon()}</View>
-            <Text style={styles.placeholderTitle}>{widget.title || widget.type}</Text>
-            <Text style={styles.placeholderDescription}>
-              {isEditing ? 'Tap to add content' : 'Widget preview'}
-            </Text>
-          </View>
-        )}
-        
-        {/* Add content overlay - only shown in editing mode */}
-        {isEditing && onMediaSelect && (
-          <View style={styles.addContentOverlay}>
-            <View style={styles.addContentButton}>
-              <Text style={styles.addContentText}>Add Content</Text>
+      {onMediaSelect ? (
+        <TouchableOpacity
+          style={[
+            styles.widgetContent,
+            {
+              height: dimensions.height
+            }
+          ]}
+          onPress={onMediaSelect}
+          activeOpacity={isEditing ? 0.7 : 1}
+          disabled={!isEditing || !onMediaSelect}
+        >
+          {WidgetComponent ? (
+            <WidgetComponent
+              widget={widget as any}
+              isEditing={isEditing}
+              onMediaSelect={onMediaSelect}
+            />
+          ) : (
+            <View style={styles.placeholderContainer}>
+              <View style={styles.iconContainer}>{getWidgetIcon()}</View>
+              <Text style={styles.placeholderTitle}>{widget.title || widget.type}</Text>
+              <Text style={styles.placeholderDescription}>
+                {isEditing ? 'Tap to add content' : 'Widget preview'}
+              </Text>
             </View>
-          </View>
-        )}
-      </TouchableOpacity>
+          )}
+
+          {/* Add content overlay - only shown in editing mode */}
+          {isEditing && (
+            <View style={styles.addContentOverlay}>
+              <View style={styles.addContentButton}>
+                <Text style={styles.addContentText}>Add Content</Text>
+              </View>
+            </View>
+          )}
+        </TouchableOpacity>
+      ) : (
+        <View
+          style={[
+            styles.widgetContent,
+            {
+              height: dimensions.height
+            }
+          ]}
+        >
+          {WidgetComponent ? (
+            <WidgetComponent
+              widget={widget as any}
+              isEditing={isEditing}
+              onMediaSelect={onMediaSelect}
+            />
+          ) : (
+            <View style={styles.placeholderContainer}>
+              <View style={styles.iconContainer}>{getWidgetIcon()}</View>
+              <Text style={styles.placeholderTitle}>{widget.title || widget.type}</Text>
+              <Text style={styles.placeholderDescription}>
+                {isEditing ? 'Tap to add content' : 'Widget preview'}
+              </Text>
+            </View>
+          )}
+        </View>
+      )}
     </View>
   );
 }
