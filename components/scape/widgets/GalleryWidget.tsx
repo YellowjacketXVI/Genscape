@@ -109,21 +109,18 @@ export default function GalleryWidget({
     return (
       <div className={`gallery-widget editing ${widget.size.width === 2 ? 'medium' : widget.size.width === 3 ? 'large' : 'small'}`}>
         <div className="widget-edit-header">
-          <h4>Edit Gallery Widget</h4>
-          
+
           <div className="layout-selector">
-            <button 
+            <button
               className={`layout-button ${layout === 'grid' ? 'active' : ''}`}
               onClick={() => handleLayoutChange('grid')}
-            >
-              Grid
-            </button>
-            <button 
+              aria-label="Grid Layout"
+            />
+            <button
               className={`layout-button ${layout === 'horizontal' ? 'active' : ''}`}
               onClick={() => handleLayoutChange('horizontal')}
-            >
-              Horizontal
-            </button>
+              aria-label="Horizontal Layout"
+            />
           </div>
         </div>
         

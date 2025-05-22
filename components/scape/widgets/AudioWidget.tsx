@@ -180,21 +180,18 @@ export default function AudioWidget({
     return (
       <div className="audio-widget editing">
         <div className="widget-edit-header">
-          <h4>Edit Audio Widget</h4>
-          
+
           <div className="player-type-selector">
-            <button 
+            <button
               className={`player-type-button ${playerType === 'standard' ? 'active' : ''}`}
               onClick={() => handlePlayerTypeChange('standard')}
-            >
-              Standard Player
-            </button>
-            <button 
+              aria-label="Standard Player"
+            />
+            <button
               className={`player-type-button ${playerType === 'playlist' ? 'active' : ''}`}
               onClick={() => handlePlayerTypeChange('playlist')}
-            >
-              Playlist
-            </button>
+              aria-label="Playlist"
+            />
           </div>
         </div>
         

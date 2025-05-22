@@ -160,9 +160,7 @@ export default function LLMWidget({
   if (isEditing) {
     return (
       <div className="llm-widget editing">
-        <div className="widget-edit-header">
-          <h4>Edit AI Chat Widget</h4>
-        </div>
+        <div className="widget-edit-header"></div>
         
         <div className="widget-edit-content">
           <div className="form-group">

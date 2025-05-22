@@ -132,9 +132,7 @@ export default function ButtonWidget({
   if (isEditing) {
     return (
       <div className="button-widget editing">
-        <div className="widget-edit-header">
-          <h4>Edit Button Widget</h4>
-        </div>
+        <div className="widget-edit-header"></div>
         
         <div className="widget-edit-content">
           <div className="form-group">
