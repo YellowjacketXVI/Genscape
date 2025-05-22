@@ -120,9 +120,11 @@ export default function EnhancedWidgetContainer({
             <Move size={20} color={Colors.text.muted} />
           </TouchableOpacity>
           
-          <View style={styles.widgetTitleContainer}>
-            <Text style={styles.widgetTitle}>{widget.title || widget.type}</Text>
-          </View>
+          {!!widget.title && (
+            <View style={styles.widgetTitleContainer}>
+              <Text style={styles.widgetTitle}>{widget.title}</Text>
+            </View>
+          )}
           
           <View style={styles.widgetActions}>
             <TouchableOpacity
@@ -233,6 +235,8 @@ const styles = StyleSheet.create({
   editingContainer: {
     borderRadius: 8,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: Colors.background.light,
   },
   redChannel: {
     borderLeftWidth: 4,
@@ -253,9 +257,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 8,
-    backgroundColor: Colors.background.medium,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.background.light,
+    borderColor: Colors.background.light,
+    backgroundColor: 'transparent',
   },
   moveHandle: {
     padding: 4,

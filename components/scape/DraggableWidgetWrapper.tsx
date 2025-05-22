@@ -197,9 +197,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     paddingHorizontal: 12,
-    backgroundColor: Colors.background.light,
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.background.light,
+    borderRadius: 8,
+    backgroundColor: 'transparent',
   },
   dragHandle: {
     padding: 8,
