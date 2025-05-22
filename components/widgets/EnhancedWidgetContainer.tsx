@@ -188,19 +188,13 @@ export default function EnhancedWidgetContainer({
           ) : (
             <View style={styles.placeholderContainer}>
               <View style={styles.iconContainer}>{getWidgetIcon()}</View>
-              <Text style={styles.placeholderTitle}>{widget.title || widget.type}</Text>
-              <Text style={styles.placeholderDescription}>
-                {isEditing ? 'Tap to add content' : 'Widget preview'}
-              </Text>
             </View>
           )}
 
           {/* Add content overlay - only shown in editing mode */}
           {isEditing && (
             <View style={styles.addContentOverlay}>
-              <View style={styles.addContentButton}>
-                <Text style={styles.addContentText}>Add Content</Text>
-              </View>
+              <View style={styles.addContentButton} />
             </View>
           )}
         </TouchableOpacity>
@@ -222,10 +216,6 @@ export default function EnhancedWidgetContainer({
           ) : (
             <View style={styles.placeholderContainer}>
               <View style={styles.iconContainer}>{getWidgetIcon()}</View>
-              <Text style={styles.placeholderTitle}>{widget.title || widget.type}</Text>
-              <Text style={styles.placeholderDescription}>
-                {isEditing ? 'Tap to add content' : 'Widget preview'}
-              </Text>
             </View>
           )}
         </View>

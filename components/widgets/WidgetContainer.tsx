@@ -58,10 +58,6 @@ export default function WidgetContainer({ widget, onMediaSelect, isEditing = fal
     return (
       <View style={styles.placeholderContainer}>
         <View style={styles.iconContainer}>{getIcon()}</View>
-        <Text style={styles.widgetTitle}>{widget.title || widget.type}</Text>
-        <Text style={styles.widgetDescription}>
-          {isEditing ? 'Tap to add content' : 'Widget preview'}
-        </Text>
       </View>
     );
   };
@@ -176,9 +172,7 @@ export default function WidgetContainer({ widget, onMediaSelect, isEditing = fal
             {/* Add content overlay - only shown in editing mode */}
             {isEditing && (
               <View style={styles.addContentOverlay}>
-                <View style={styles.addContentButton}>
-                  <Text style={styles.addContentText}>Tap to add content</Text>
-                </View>
+                <View style={styles.addContentButton} />
               </View>
             )}
           </View>
@@ -208,9 +202,7 @@ export default function WidgetContainer({ widget, onMediaSelect, isEditing = fal
             {/* Add content overlay - only shown in editing mode */}
             {isEditing && (
               <View style={styles.addContentOverlay}>
-                <View style={styles.addContentButton}>
-                  <Text style={styles.addContentText}>Tap to add content</Text>
-                </View>
+                <View style={styles.addContentButton} />
               </View>
             )}
           </View>

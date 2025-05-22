@@ -127,7 +127,7 @@ export default function ShopWidget({
 
   if (isEditing) {
     return (
-      <div className="shop-widget editing">
+      <div className={`shop-widget editing ${widget.size.width === 2 ? 'medium' : widget.size.width === 3 ? 'large' : 'small'}`}>
         <div className="widget-edit-header">
           <h4>Edit Shop Widget</h4>
           
@@ -233,7 +233,7 @@ export default function ShopWidget({
 
   // Display mode
   return (
-    <div className="shop-widget">
+    <div className={`shop-widget ${widget.size.width === 2 ? 'medium' : widget.size.width === 3 ? 'large' : 'small'}`}>
       {products.length > 0 ? (
         <div className={`products-${layout}`}>
           {products.map((product) => (
