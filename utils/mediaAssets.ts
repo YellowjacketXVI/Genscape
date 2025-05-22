@@ -7,7 +7,24 @@ export type MediaType = 'image' | 'video' | 'audio';
 
 // Function to get the URL for a media file in the TestUserMedia directory
 export const getTestUserMediaUrl = (type: MediaType, filename: string): string => {
-  return `/assets/TestUserMedia/${type}s/${filename}`;
+  let folder = '';
+  switch (type) {
+    case 'image':
+      folder = 'images';
+      break;
+    case 'video':
+      folder = 'video';
+      break;
+    case 'audio':
+      folder = 'audio';
+      break;
+    default:
+      folder = `${type}s`;
+  }
+  // Use a relative path so the assets load correctly in both web and native builds
+  // Encode the filename to handle spaces and other characters
+  const encodedName = encodeURIComponent(filename);
+  return `./assets/TestUserMedia/${folder}/${encodedName}`;
 };
 
 // Function to get all available test media
