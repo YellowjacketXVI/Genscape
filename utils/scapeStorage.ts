@@ -234,22 +234,26 @@ export const exportScapeToJson = (scape: Scape): void => {
  * Import a scape from JSON file
  */
 export const importScapeFromJson = (file: File): Promise<Scape> => {
-  return new Promise((resolve, reject) => {
+  return new Promise<Scape>((resolve, reject) => {
     const reader = new FileReader();
-    
+
     reader.onload = (event) => {
       try {
-        const scapeData = JSON.parse(event.target.result as string);
+        const result = event.target?.result;
+        if (typeof result !== 'string') {
+          return reject(new Error('Invalid JSON file'));
+        }
+        const scapeData = JSON.parse(result);
         resolve(scapeData);
       } catch (error) {
         reject(new Error('Invalid JSON file'));
       }
     };
-    
+
     reader.onerror = () => {
       reject(new Error('Error reading file'));
     };
-    
+
     reader.readAsText(file);
   });
 };

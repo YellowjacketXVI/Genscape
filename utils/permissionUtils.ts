@@ -308,13 +308,13 @@ export const filterPrompt = (
 };
 
 // Banned terms for moderate strictness
-const MODERATE_BANNED_TERMS = [
+const MODERATE_BANNED_TERMS: string[] = [
   // This would be a list of terms to filter in moderate mode
   // Placeholder for actual implementation
 ];
 
 // Additional banned terms for strict strictness
-const STRICT_BANNED_TERMS = [
+const STRICT_BANNED_TERMS: string[] = [
   // This would be a list of additional terms to filter in strict mode
   // Placeholder for actual implementation
 ];
