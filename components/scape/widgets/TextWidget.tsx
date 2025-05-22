@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 type TextWidgetProps = {
   widget: {
@@ -20,8 +20,11 @@ type TextWidgetProps = {
 export default function TextWidget({ widget, onUpdate }: TextWidgetProps) {
   const [text, setText] = useState(widget.content?.body || 'Click to edit this text');
   const [editing, setEditing] = useState(false);
+  const divRef = useRef<HTMLDivElement>(null);
 
-  const handleClick = () => setEditing(true);
+  const handleClick = () => {
+    setEditing(true);
+  };
 
   const handleBlur = (e: React.FocusEvent<HTMLDivElement>) => {
     const newText = e.currentTarget.innerText;
@@ -34,6 +37,17 @@ export default function TextWidget({ widget, onUpdate }: TextWidgetProps) {
       });
     }
   };
+
+  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
+    const newText = e.currentTarget.innerText;
+    setText(newText);
+  };
+
+  useEffect(() => {
+    if (editing) {
+      divRef.current?.focus();
+    }
+  }, [editing]);
 
   const fontSize = widget.fontSize ?? 12;
 
@@ -50,7 +64,9 @@ export default function TextWidget({ widget, onUpdate }: TextWidgetProps) {
       }}
       contentEditable={editing}
       suppressContentEditableWarning
+      ref={divRef}
       onClick={handleClick}
+      onInput={handleInput}
       onBlur={handleBlur}
     >
       {text}
