@@ -396,7 +396,11 @@ export default function UnifiedScapeEditor({
                 >
                   <EnhancedWidgetContainer
                     widget={widget}
-                    onMediaSelect={() => handleWidgetPress(widget)}
+                    onMediaSelect={
+                      widget.type === 'text' || widget.type === 'header'
+                        ? undefined
+                        : () => handleWidgetPress(widget)
+                    }
                     isEditing={editMode}
                     onSizeChange={(newWidth) => handleWidgetSizeChange(widget.id, newWidth)}
                     onRemove={() => handleDeleteWidget(widget.id)}

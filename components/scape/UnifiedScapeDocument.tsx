@@ -398,7 +398,11 @@ export default function UnifiedScapeDocument({
                 >
                   <WidgetContainer
                     widget={widget}
-                    onMediaSelect={() => handleWidgetPress(widget)}
+                    onMediaSelect={
+                      widget.type === 'text' || widget.type === 'header'
+                        ? undefined
+                        : () => handleWidgetPress(widget)
+                    }
                     isEditing={true}
                     onSizeChange={(newWidth) => handleWidgetSizeChange(widget.id, newWidth)}
                   />
