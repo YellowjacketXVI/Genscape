@@ -96,9 +96,7 @@ export default function StyledWidgetContainer({ widget, onPress }: StyledWidgetC
 
       default:
         return (
-          <View style={styles.placeholderContent}>
-            <Text style={styles.placeholderText}>{widget.title || widget.type}</Text>
-          </View>
+          <View style={styles.placeholderContent} />
         );
     }
   };
