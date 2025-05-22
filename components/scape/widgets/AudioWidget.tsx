@@ -179,22 +179,6 @@ export default function AudioWidget({
   if (isEditing) {
     return (
       <div className="audio-widget editing">
-        <div className="widget-edit-header">
-
-          <div className="player-type-selector">
-            <button
-              className={`player-type-button ${playerType === 'standard' ? 'active' : ''}`}
-              onClick={() => handlePlayerTypeChange('standard')}
-              aria-label="Standard Player"
-            />
-            <button
-              className={`player-type-button ${playerType === 'playlist' ? 'active' : ''}`}
-              onClick={() => handlePlayerTypeChange('playlist')}
-              aria-label="Playlist"
-            />
-          </div>
-        </div>
-        
         <div className="widget-edit-content">
           <div className="tracks-list">
             {tracks.length > 0 ? (

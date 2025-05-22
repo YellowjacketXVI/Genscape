@@ -157,8 +157,6 @@ export default function CommsWidget({
   if (isEditing) {
     return (
       <div className="comms-widget editing">
-        <div className="widget-edit-header"></div>
-        
         <div className="widget-edit-content">
           {(widget.type === 'chat' || widget.type === 'live') && (
             <div className="live-settings">

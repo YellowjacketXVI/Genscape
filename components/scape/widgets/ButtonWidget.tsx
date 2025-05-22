@@ -132,8 +132,6 @@ export default function ButtonWidget({
   if (isEditing) {
     return (
       <div className="button-widget editing">
-        <div className="widget-edit-header"></div>
-        
         <div className="widget-edit-content">
           <div className="form-group">
             <label htmlFor="button-label">Button Label</label>
