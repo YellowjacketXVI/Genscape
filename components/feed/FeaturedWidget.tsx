@@ -99,9 +99,7 @@ export default function FeaturedWidget({ widget, isDesktop }: FeaturedWidgetProp
         
       default:
         return (
-          <div className="default-widget">
-            <span>{widget.type}</span>
-          </div>
+          <div className="default-widget" />
         );
     }
   };
