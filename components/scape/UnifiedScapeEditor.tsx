@@ -203,6 +203,13 @@ export default function UnifiedScapeEditor({
   };
 
   const handleDeleteWidget = (widgetId: string) => {
+    if (Platform.OS === 'web') {
+      if (confirm('Are you sure you want to delete this widget?')) {
+        removeWidget(widgetId);
+      }
+      return;
+    }
+
     Alert.alert(
       'Delete Widget',
       'Are you sure you want to delete this widget?',

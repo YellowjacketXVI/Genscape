@@ -140,6 +140,18 @@ export default function UnifiedScapeDocument({
 
   // Handle removing a widget
   const handleRemoveWidget = (widgetId: string) => {
+    if (Platform.OS === 'web') {
+      if (confirm('Are you sure you want to remove this widget?')) {
+        const updatedWidgets = widgets.filter(w => w.id !== widgetId);
+        // Update positions
+        updatedWidgets.forEach((widget, idx) => {
+          widget.position = idx + 1;
+        });
+        setWidgets(updatedWidgets);
+      }
+      return;
+    }
+
     Alert.alert(
       'Remove Widget',
       'Are you sure you want to remove this widget?',
