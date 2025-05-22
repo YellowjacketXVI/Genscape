@@ -8,7 +8,8 @@ import {
   Image,
   ScrollView,
   Alert,
-  Modal
+  Modal,
+  Platform
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
