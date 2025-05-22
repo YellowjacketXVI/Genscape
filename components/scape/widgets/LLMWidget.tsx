@@ -160,8 +160,6 @@ export default function LLMWidget({
   if (isEditing) {
     return (
       <div className="llm-widget editing">
-        <div className="widget-edit-header"></div>
-        
         <div className="widget-edit-content">
           <div className="form-group">
             <label htmlFor="model-select">AI Model</label>

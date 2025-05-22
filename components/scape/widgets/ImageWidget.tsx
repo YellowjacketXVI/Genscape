@@ -61,8 +61,6 @@ export default function ImageWidget({
   if (isEditing) {
     return (
       <div className="image-widget editing">
-        <div className="widget-edit-header"></div>
-        
         <div className="widget-edit-content">
           <div className="media-preview" onClick={onMediaSelect}>
             {media ? (
