@@ -107,10 +107,6 @@ export default function StyledWidgetContainer({ widget, onPress }: StyledWidgetC
     <View
       style={[
         styles.container,
-        {
-          borderColor: channelColor,
-          borderWidth: channelColor !== 'transparent' ? 2 : 0,
-        }
       ]}
     >
       <TouchableOpacity
@@ -136,7 +132,8 @@ export default function StyledWidgetContainer({ widget, onPress }: StyledWidgetC
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: 8,
+    padding: 8,
     borderRadius: 8,
     overflow: 'hidden',
     position: 'relative',

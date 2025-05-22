@@ -118,13 +118,7 @@ export default function ScapeView({
     return (
       <View
         key={widget.id}
-        style={[
-          styles.widgetContainer,
-          {
-            borderColor: channelColor,
-            borderWidth: channelColor !== 'transparent' ? 2 : 0,
-          },
-        ]}
+        style={styles.widgetContainer}
       >
         {content}
       </View>
@@ -323,7 +317,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   widgetContainer: {
-    marginBottom: 16,
+    marginBottom: 8,
+    padding: 8,
     borderRadius: 8,
     overflow: 'hidden',
     position: 'relative',
