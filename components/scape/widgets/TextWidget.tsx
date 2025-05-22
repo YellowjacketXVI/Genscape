@@ -18,10 +18,10 @@ type TextWidgetProps = {
 };
 
 export default function TextWidget({ widget, onUpdate }: TextWidgetProps) {
-  const [text, setText] = useState(widget.content?.body || 'Double click to edit this text');
+  const [text, setText] = useState(widget.content?.body || 'Click to edit this text');
   const [editing, setEditing] = useState(false);
 
-  const handleDoubleClick = () => setEditing(true);
+  const handleClick = () => setEditing(true);
 
   const handleBlur = (e: React.FocusEvent<HTMLDivElement>) => {
     const newText = e.currentTarget.innerText;
@@ -50,7 +50,7 @@ export default function TextWidget({ widget, onUpdate }: TextWidgetProps) {
       }}
       contentEditable={editing}
       suppressContentEditableWarning
-      onDoubleClick={handleDoubleClick}
+      onClick={handleClick}
       onBlur={handleBlur}
     >
       {text}
