@@ -236,12 +236,11 @@ export default function EnhancedWidgetContainer({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: 8,
+    padding: 8,
     position: 'relative',
   },
   editingContainer: {
-    borderWidth: 1,
-    borderColor: Colors.background.light,
     borderRadius: 8,
     overflow: 'hidden',
   },

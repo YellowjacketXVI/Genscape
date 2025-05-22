@@ -182,7 +182,7 @@ export default function DraggableWidgetWrapper({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: 8,
   },
   dragging: {
     shadowColor: '#000',

@@ -530,6 +530,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   widgetContainer: {
+    marginBottom: 8,
+    padding: 8,
     borderRadius: 8,
     overflow: 'hidden',
   },
