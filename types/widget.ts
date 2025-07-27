@@ -10,34 +10,29 @@ export type BaseWidget = {
   position: number; // Vertical position in layout
   title?: string;
   mediaIds?: string[]; // IDs of media items assigned to this widget
-  channel?: 'red' | 'green' | 'blue' | 'neutral'; // Channel for widget interactions
-  isFeatured?: boolean; // Whether this widget is featured in the feed
-  featuredCaption?: string; // Caption for featured widgets (max 300 chars)
 };
 
-export type MediaWidget = BaseWidget & {
-  type: 'media';
-  mediaType: 'image' | 'video';
-  caption?: string;
-  altText?: string;
+export type HeroWidget = BaseWidget & {
+  type: 'hero';
+  headline: string;
+  subheading?: string;
+  ctaText?: string;
+  ctaLink?: string;
 };
 
-export type GalleryWidget = BaseWidget & {
-  type: 'gallery';
-  layout: 'horizontal' | 'grid';
+export type CarouselWidget = BaseWidget & {
+  type: 'carousel';
   items: Array<{
     id: string;
-    mediaId: string;
-    caption?: string;
+    title: string;
+    link?: string;
   }>;
 };
 
 export type ShopWidget = BaseWidget & {
   type: 'shop';
-  layout: 'horizontal' | 'grid';
   products: Array<{
     id: string;
-    mediaId: string;
     name: string;
     price: number;
     description?: string;
@@ -47,31 +42,29 @@ export type ShopWidget = BaseWidget & {
 
 export type AudioWidget = BaseWidget & {
   type: 'audio';
-  playerType: 'standard' | 'playlist';
   tracks: Array<{
     id: string;
-    mediaId: string;
     title: string;
     artist: string;
     duration: number;
+    url: string;
   }>;
   currentTrack?: string;
 };
 
-export type AudioCaptionWidget = BaseWidget & {
-  type: 'audio-caption';
-  audioId: string;
-  showTags: boolean;
+export type GalleryWidget = BaseWidget & {
+  type: 'gallery';
+  layout: 'grid' | 'masonry';
 };
 
-export type CommsWidget = BaseWidget & {
-  type: 'chat' | 'comments' | 'live';
-  streamUrl?: string;
-  isLive?: boolean;
-  viewerCount?: number;
+export type LiveWidget = BaseWidget & {
+  type: 'live';
+  streamUrl: string;
+  isLive: boolean;
+  viewerCount: number;
   startTime?: string;
   endTime?: string;
-  settings: {
+  chat?: {
     enabled: boolean;
     moderationLevel: 'low' | 'medium' | 'high';
   };
@@ -79,13 +72,16 @@ export type CommsWidget = BaseWidget & {
 
 export type ButtonWidget = BaseWidget & {
   type: 'button';
-  targetChannel: 'red' | 'green' | 'blue';
-  label: string;
-  style: 'primary' | 'secondary' | 'accent';
+  buttons: Array<{
+    id: string;
+    label: string;
+    link: string;
+    style: 'primary' | 'secondary' | 'accent';
+  }>;
 };
 
 export type TextWidget = BaseWidget & {
-  type: 'text' | 'header';
+  type: 'text';
   content: {
     header?: string;
     title?: string;
@@ -93,26 +89,17 @@ export type TextWidget = BaseWidget & {
     tags?: string[];
   };
   style: 'normal' | 'highlight' | 'card';
-  linkedMediaId?: string; // For header widgets that display media filename
 };
 
-export type LLMWidget = BaseWidget & {
-  type: 'llm';
-  prompt: string;
-  model: string;
-  systemMessage?: string;
-};
-
-export type Widget =
-  | MediaWidget
-  | GalleryWidget
-  | ShopWidget
-  | AudioWidget
-  | AudioCaptionWidget
-  | CommsWidget
-  | ButtonWidget
-  | TextWidget
-  | LLMWidget;
+export type Widget = 
+  | HeroWidget 
+  | CarouselWidget 
+  | ShopWidget 
+  | AudioWidget 
+  | GalleryWidget 
+  | LiveWidget 
+  | ButtonWidget 
+  | TextWidget;
 
 export type WidgetLayout = {
   widgets: Widget[];

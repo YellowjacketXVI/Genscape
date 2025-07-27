@@ -4,8 +4,8 @@ import { StatusBar } from 'expo-status-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_700Bold } from '@expo-google-fonts/inter';
 import * as SplashScreen from 'expo-splash-screen';
-import 'react-native-gesture-handler'; // Import gesture handler
-import { ScapeProvider } from '@/contexts/ScapeContext';
+import { AuthProvider } from '@/contexts/AuthContext';
+import AuthGuard from '@/components/auth/AuthGuard';
 
 // Keep splash screen visible while loading fonts
 SplashScreen.preventAutoHideAsync();
@@ -36,10 +36,12 @@ export default function RootLayout() {
   }
 
   return (
-    <ScapeProvider>
-      <>
+    <AuthProvider>
+      <AuthGuard>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="auth/login" options={{ headerShown: false }} />
+          <Stack.Screen name="auth/signup" options={{ headerShown: false }} />
           <Stack.Screen name="generate" options={{
             presentation: 'modal',
             headerShown: true,
@@ -64,12 +66,11 @@ export default function RootLayout() {
               fontFamily: 'Inter-Medium',
             },
           }} />
-          <Stack.Screen name="scape-edit" options={{ headerShown: false }} />
-          <Stack.Screen name="scape-wizard" options={{ headerShown: false }} />
+          <Stack.Screen name="scape-wizard" options={{ presentation: 'modal' }} />
           <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style="light" />
-      </>
-    </ScapeProvider>
+      </AuthGuard>
+    </AuthProvider>
   );
 }

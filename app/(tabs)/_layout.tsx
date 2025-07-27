@@ -3,22 +3,20 @@ import { StyleSheet } from 'react-native';
 import { Chrome as Home, LayoutGrid as Layout, FolderOpen } from 'lucide-react-native';
 import { BlurView } from 'expo-blur';
 import Colors from '@/constants/Colors';
-import AppContainer from '@/components/layout/AppContainer';
 
 export default function TabLayout() {
   const tabBarBackground = () => {
     return (
-      <BlurView
-        intensity={80}
+      <BlurView 
+        intensity={80} 
         tint="dark"
-        style={StyleSheet.absoluteFill}
+        style={StyleSheet.absoluteFill} 
       />
     );
   };
 
   return (
-    <AppContainer>
-      <Tabs
+    <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: '#999',
@@ -50,7 +48,6 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
-    </AppContainer>
   );
 }
 

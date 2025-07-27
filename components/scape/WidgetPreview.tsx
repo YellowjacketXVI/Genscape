@@ -28,38 +28,22 @@ export default function WidgetPreview({ widget }: WidgetPreviewProps) {
   };
 
   const getWidgetHeight = () => {
-    // Check if widget.size is an object with width property (new format)
-    if (typeof widget.size === 'object' && widget.size.width) {
-      // For media and gallery types, use taller heights
-      if (widget.type === 'media' || widget.type === 'gallery') {
-        return widget.size.width === 1 ? 150 : // Small
-               widget.size.width === 2 ? 250 : // Medium
-               350; // Large
-      }
-
-      // For other widget types
-      return widget.size.width === 1 ? 120 : // Small
-             widget.size.width === 2 ? 180 : // Medium
-             240; // Large
-    }
-
-    // Fallback for string-based size (old format)
     switch (widget.size) {
       case 'small':
-        return 120;
+        return 80;
       case 'medium':
-        return 180;
+        return 120;
       case 'large':
-        return 240;
+        return 200;
       default:
-        return 180;
+        return 120;
     }
   };
 
   return (
-    <TouchableOpacity
+    <TouchableOpacity 
       style={[
-        styles.container,
+        styles.container, 
         { height: getWidgetHeight() }
       ]}
     >
@@ -69,24 +53,11 @@ export default function WidgetPreview({ widget }: WidgetPreviewProps) {
           <Text style={styles.title}>{widget.title}</Text>
         </View>
         <View style={styles.headerRight}>
-          <Text style={styles.sizeText}>
-            {typeof widget.size === 'object'
-              ? widget.size.width === 1 ? 'Small' : widget.size.width === 2 ? 'Medium' : 'Large'
-              : widget.size}
-          </Text>
+          <Text style={styles.sizeText}>{widget.size}</Text>
         </View>
       </View>
       <View style={styles.content}>
-        {(widget.type === 'media' || widget.type === 'gallery') ? (
-          <View style={styles.mediaPreview}>
-            <ImageIcon size={40} color={Colors.text.muted} />
-            <Text style={[styles.contentText, { marginTop: 8 }]}>
-              {widget.type === 'media' ? 'Media Display' : 'Gallery'}
-            </Text>
-          </View>
-        ) : (
-          <Text style={styles.contentText}>Tap to configure content</Text>
-        )}
+        <Text style={styles.contentText}>Tap to configure content</Text>
       </View>
     </TouchableOpacity>
   );
@@ -136,15 +107,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 16,
-  },
-  mediaPreview: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.background.medium,
-    borderRadius: 8,
-    padding: 24,
-    width: '100%',
-    height: '100%',
   },
   contentText: {
     fontFamily: 'Inter-Regular',

@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, FlatList, Image, Dimensions, Platform, useWindowDimensions } from 'react-native';
-import ThemedScrollView from '@/components/layout/ThemedScrollView';
+import { StyleSheet, Text, View, TouchableOpacity, FlatList, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Plus, CirclePlus as PlusCircle, CreditCard as Edit2, Trash2 } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
@@ -41,22 +40,19 @@ const SCAPES_DATA = [
 
 export default function ScapeManagerScreen() {
   const router = useRouter();
-  const { width } = useWindowDimensions();
-  const isDesktop = width > 768;
   const [scapes, setScapes] = useState(SCAPES_DATA);
-  const [filter, setFilter] = useState('published'); // 'published', 'drafts'
-
+  const [filter, setFilter] = useState('all'); // 'all', 'following', 'published', 'drafts'
+  
   const filteredScapes = scapes.filter((scape) => {
     if (filter === 'all') return true;
+    if (filter === 'following') return scape.isFollowing;
     if (filter === 'published') return scape.isPublished;
     if (filter === 'drafts') return !scape.isPublished;
     return true;
   });
 
   const createNewScape = () => {
-    // Create a new scape and navigate to the edit page
-    const newScapeId = `new-${Date.now()}`;
-    router.push(`/scape-edit/${newScapeId}`);
+    router.push('/scape-wizard');
   };
 
   return (
@@ -70,14 +66,25 @@ export default function ScapeManagerScreen() {
       </View>
 
       <View style={styles.filterContainer}>
-        {/* Removed 'All' filter to focus on published/drafts tabs */}
-        <TouchableOpacity
+        <TouchableOpacity 
+          style={[styles.filterButton, filter === 'all' && styles.filterActive]}
+          onPress={() => setFilter('all')}
+        >
+          <Text style={[styles.filterText, filter === 'all' && styles.filterTextActive]}>All</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.filterButton, filter === 'following' && styles.filterActive]}
+          onPress={() => setFilter('following')}
+        >
+          <Text style={[styles.filterText, filter === 'following' && styles.filterTextActive]}>Following</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
           style={[styles.filterButton, filter === 'published' && styles.filterActive]}
           onPress={() => setFilter('published')}
         >
           <Text style={[styles.filterText, filter === 'published' && styles.filterTextActive]}>Published</Text>
         </TouchableOpacity>
-        <TouchableOpacity
+        <TouchableOpacity 
           style={[styles.filterButton, filter === 'drafts' && styles.filterActive]}
           onPress={() => setFilter('drafts')}
         >
@@ -95,54 +102,32 @@ export default function ScapeManagerScreen() {
           </TouchableOpacity>
         </View>
       ) : (
-        Platform.OS === 'web' && isDesktop ? (
-          <ThemedScrollView contentContainerStyle={styles.scrollViewContent}>
-            <View style={styles.scapesGrid}>
-              {filteredScapes.map(item => (
-                <View key={item.id} style={styles.gridItem}>
-                  <ScapeItem
-                    item={item}
-                    onEdit={() => {}}
-                    onDelete={() => {}}
-                    isDesktop={isDesktop}
-                  />
-                </View>
-              ))}
-            </View>
-          </ThemedScrollView>
-        ) : (
-          <FlatList
-            data={filteredScapes}
-            keyExtractor={(item) => item.id}
-            numColumns={isDesktop ? 2 : 1} // Two columns on desktop, one on mobile
-            key={isDesktop ? 'desktop' : 'mobile'} // Force re-render when layout changes
-            columnWrapperStyle={isDesktop ? styles.columnWrapper : undefined} // Only apply on desktop
-            renderItem={({ item }) => (
-              <ScapeItem
-                item={item}
-                onEdit={() => {}}
-                onDelete={() => {}}
-                isDesktop={isDesktop}
-              />
-            )}
-            contentContainerStyle={styles.listContent}
-          />
-        )
+        <FlatList
+          data={filteredScapes}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <ScapeItem 
+              item={item}
+              onEdit={() => {}}
+              onDelete={() => {}}
+            />
+          )}
+          contentContainerStyle={styles.listContent}
+        />
       )}
     </View>
   );
 }
 
-function ScapeItem({ item, onEdit, onDelete, isDesktop = false }: { item: any, onEdit: () => void, onDelete: () => void, isDesktop?: boolean }) {
-  const router = useRouter();
+function ScapeItem({ item, onEdit, onDelete }: { item: any, onEdit: () => void, onDelete: () => void }) {
   return (
-    <View style={[styles.scapeItem, isDesktop && styles.desktopScapeItem]}>
-      <Image
-        source={{ uri: item.coverImage }}
-        style={[styles.scapeImage, isDesktop && styles.desktopScapeImage]}
+    <View style={styles.scapeItem}>
+      <Image 
+        source={{ uri: item.coverImage }} 
+        style={styles.scapeImage}
         resizeMode="cover"
       />
-
+      
       <View style={styles.scapeContent}>
         <View style={styles.scapeHeader}>
           <Text style={styles.scapeTitle}>{item.title}</Text>
@@ -156,19 +141,16 @@ function ScapeItem({ item, onEdit, onDelete, isDesktop = false }: { item: any, o
             </View>
           )}
         </View>
-
+        
         <Text style={styles.scapeDescription} numberOfLines={2}>{item.description}</Text>
-
+        
         <View style={styles.scapeStats}>
           <Text style={styles.statText}>{item.widgetCount} widgets</Text>
           <Text style={styles.statText}>{item.viewCount} views</Text>
         </View>
-
+        
         <View style={styles.scapeActions}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => router.push(`/scape-edit/${item.id}`)}
-          >
+          <TouchableOpacity style={styles.actionButton} onPress={onEdit}>
             <Edit2 size={18} color={Colors.text.primary} />
             <Text style={styles.actionText}>Edit</Text>
           </TouchableOpacity>
@@ -182,7 +164,6 @@ function ScapeItem({ item, onEdit, onDelete, isDesktop = false }: { item: any, o
   );
 }
 
-// Create styles with responsive values
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -193,7 +174,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'web' ? 24 : 60, // Lower padding on web
+    paddingTop: 60,
     paddingBottom: 16,
   },
   headerTitle: {
@@ -242,28 +223,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 80,
   },
-  scrollViewContent: {
-    paddingBottom: 80, // Account for tab bar
-    width: '100%',
-  },
-  scapesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    padding: 12,
-    gap: 24, // Use gap for consistent spacing between items - vertical spacing
-    columnGap: 24, // Horizontal spacing between posts set to 24px
-    width: '100%',
-  },
-  gridItem: {
-    width: '48%', // Use percentage-based width for better scaling (slightly less than 50% to account for gap)
-    marginBottom: 0, // Gap property handles the spacing
-  },
-  columnWrapper: {
-    justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    width: '100%',
-  },
   emptyState: {
     flex: 1,
     alignItems: 'center',
@@ -304,20 +263,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     marginBottom: 16,
-    // For mobile (single column), take full width minus margins
-    width: '100%',
-  },
-  desktopScapeItem: {
-    // For desktop (two columns), use percentage-based width for better scaling
-    width: '100%', // Full width within its container (gridItem handles the width)
-    marginBottom: 24,
   },
   scapeImage: {
     width: '100%',
     height: 120,
-  },
-  desktopScapeImage: {
-    height: 160, // Taller image on desktop
   },
   scapeContent: {
     padding: 16,
