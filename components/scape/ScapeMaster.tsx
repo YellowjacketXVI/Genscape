@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import ScapeView from './ScapeView';
-import ScapeEditor from './ScapeEditor';
+import UnifiedScapeEditor from './UnifiedScapeEditor';
 
 type Widget = {
   id: string;
@@ -62,11 +62,11 @@ type ScapeMasterProps = {
   onCancel?: () => void;
 };
 
-export default function ScapeMaster({ 
-  scape, 
-  isEditing = false, 
-  onSave, 
-  onCancel 
+export default function ScapeMaster({
+  scape,
+  isEditing = false,
+  onSave,
+  onCancel
 }: ScapeMasterProps) {
   const [editMode, setEditMode] = useState(isEditing);
   const [currentScape, setCurrentScape] = useState<Scape>(scape);
@@ -77,13 +77,13 @@ export default function ScapeMaster({
     const handleResize = () => {
       setIsDesktop(window.innerWidth > 768);
     };
-    
+
     // Set initial value
     handleResize();
-    
+
     // Add event listener
     window.addEventListener('resize', handleResize);
-    
+
     // Clean up
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -108,7 +108,7 @@ export default function ScapeMaster({
   const handleCancel = () => {
     // Reset to original scape
     setCurrentScape(scape);
-    
+
     if (onCancel) {
       onCancel();
     }
@@ -122,7 +122,7 @@ export default function ScapeMaster({
   return (
     <div className={`scape-master ${isDesktop ? 'desktop' : 'mobile'}`}>
       {editMode ? (
-        <ScapeEditor
+        <UnifiedScapeEditor
           scape={currentScape}
           onSave={handleSave}
           onCancel={handleCancel}

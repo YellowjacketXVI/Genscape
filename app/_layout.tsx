@@ -65,6 +65,7 @@ export default function RootLayout() {
             },
           }} />
           <Stack.Screen name="scape-edit" options={{ headerShown: false }} />
+          <Stack.Screen name="scape-wizard" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style="light" />

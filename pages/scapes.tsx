@@ -14,13 +14,13 @@ export default function ScapesManager() {
     const handleResize = () => {
       setIsDesktop(window.innerWidth > 768);
     };
-    
+
     // Set initial value
     handleResize();
-    
+
     // Add event listener
     window.addEventListener('resize', handleResize);
-    
+
     // Clean up
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -40,27 +40,27 @@ export default function ScapesManager() {
         setLoading(false);
       }
     };
-    
+
     fetchScapes();
   }, [activeTab]);
 
   const handleCreateScape = () => {
-    router.push('/wizard');
+    router.push('/scape-edit/new');
   };
 
   const handleEditScape = (scapeId) => {
-    router.push(`/wizard?id=${scapeId}`);
+    router.push(`/scape-edit/${scapeId}`);
   };
 
   const handleDeleteScape = async (scapeId) => {
     if (!confirm('Are you sure you want to delete this scape?')) return;
-    
+
     try {
       // Replace with actual API call
       await fetch(`/api/scapes/${scapeId}`, {
         method: 'DELETE',
       });
-      
+
       // Remove from list
       setScapes(scapes.filter(scape => scape.id !== scapeId));
     } catch (error) {
@@ -73,38 +73,38 @@ export default function ScapesManager() {
       <header className="app-header">
         <h1>My Scapes</h1>
         <div className="header-actions">
-          <button 
-            className="btn-primary" 
+          <button
+            className="btn-primary"
             onClick={handleCreateScape}
           >
             Create Scape
           </button>
         </div>
       </header>
-      
+
       <div className="tabs-container">
-        <button 
-          className={activeTab === 'published' ? 'tab active' : 'tab'} 
+        <button
+          className={activeTab === 'published' ? 'tab active' : 'tab'}
           onClick={() => setActiveTab('published')}
         >
           Published
         </button>
-        <button 
-          className={activeTab === 'drafts' ? 'tab active' : 'tab'} 
+        <button
+          className={activeTab === 'drafts' ? 'tab active' : 'tab'}
           onClick={() => setActiveTab('drafts')}
         >
           Drafts
         </button>
       </div>
-      
+
       <main className="scapes-container">
         {loading ? (
           <div className="loading-indicator">Loading...</div>
         ) : scapes.length === 0 ? (
           <div className="empty-state">
             <p>You don't have any {activeTab} scapes yet.</p>
-            <button 
-              className="btn-secondary" 
+            <button
+              className="btn-secondary"
               onClick={handleCreateScape}
             >
               Create your first scape
@@ -114,14 +114,14 @@ export default function ScapesManager() {
           <div className={`scapes-grid ${isDesktop ? 'desktop' : 'mobile'}`}>
             {scapes.map((scape) => (
               <div key={scape.id} className="scape-card">
-                <div 
-                  className="scape-preview" 
+                <div
+                  className="scape-preview"
                   onClick={() => router.push(`/scape/${scape.id}`)}
                 >
                   {scape.featuredWidget?.mediaUrl ? (
-                    <img 
-                      src={scape.featuredWidget.mediaUrl} 
-                      alt={scape.name} 
+                    <img
+                      src={scape.featuredWidget.mediaUrl}
+                      alt={scape.name}
                     />
                   ) : (
                     <div className="placeholder-preview">
@@ -129,25 +129,25 @@ export default function ScapesManager() {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="scape-info">
                   <h3>{scape.name}</h3>
                   <p>{scape.description || 'No description'}</p>
-                  
+
                   <div className="scape-stats">
                     <span>{scape.stats?.views || 0} views</span>
                     <span>{scape.stats?.likes || 0} likes</span>
                   </div>
-                  
+
                   <div className="scape-actions">
-                    <button 
-                      className="btn-text" 
+                    <button
+                      className="btn-text"
                       onClick={() => handleEditScape(scape.id)}
                     >
                       Edit
                     </button>
-                    <button 
-                      className="btn-text danger" 
+                    <button
+                      className="btn-text danger"
                       onClick={() => handleDeleteScape(scape.id)}
                     >
                       Delete
@@ -159,7 +159,7 @@ export default function ScapesManager() {
           </div>
         )}
       </main>
-      
+
       <BottomNav activePage="scapes" />
     </div>
   );
