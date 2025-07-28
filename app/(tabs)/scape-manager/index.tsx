@@ -12,7 +12,7 @@ export default function ScapeManagerScreen() {
   const router = useRouter();
   const theme = useTheme();
   const { user } = useAuth();
-  const [scapes, setScapes] = useState<FeedScape[]>([]);
+  const [scapes, setScapes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // 'all', 'published', 'drafts'
 

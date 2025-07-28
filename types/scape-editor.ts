@@ -27,12 +27,14 @@ export interface ScapeEditorWidget {
 export interface ScapeEditorState {
   id: string;
   title: string;
+  description?: string;
   banner: string | null;
   bannerStatic: boolean;
   widgets: ScapeEditorWidget[];
   featureWidgetId: string | null;
   tagline: string;
   isDraft: boolean;
+  visibility: 'public' | 'private';
 }
 
 export type WidgetType = 

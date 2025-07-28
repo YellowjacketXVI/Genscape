@@ -45,12 +45,14 @@ export default function ScapeEditorScreen() {
   const [scapeState, setScapeState] = useState<ScapeEditorState>({
     id: id || 'new',
     title: '',
+    description: '',
     banner: null,
     bannerStatic: false,
     widgets: [],
     featureWidgetId: null,
     tagline: '',
     isDraft: true,
+    visibility: 'public',
   });
   
   const [showWidgetPanel, setShowWidgetPanel] = useState(false);
@@ -129,6 +131,7 @@ export default function ScapeEditorScreen() {
             featureWidgetId: scape.feature_widget_id,
             tagline: scape.tagline,
             isDraft: !scape.is_published,
+            visibility: 'public', // Default to public, will be loaded from DB later
           });
         } else {
           Alert.alert('Error', 'Scape not found');
@@ -253,23 +256,17 @@ export default function ScapeEditorScreen() {
 
     setSaving(true);
     try {
-      // First save the scape as a draft to get the ID
+      // Save the scape with published state
       const savedScapeId = await saveScape({
         ...scapeState,
-        isDraft: true, // Save as draft first
+        isDraft: false, // Set as published
       }, user.id);
-
-      // Then publish it with any permissions/settings
-      await publishScape(savedScapeId, {
-        // Add any permission settings here when implemented
-        // gen_guard: scapeState.permissions?.genGuard,
-        // dataset_reuse: scapeState.permissions?.datasetReuse,
-        // visibility: scapeState.permissions?.visibility,
-      });
 
       // Update state
       if (scapeState.id === 'new') {
         setScapeState(prev => ({ ...prev, id: savedScapeId, isDraft: false }));
+      } else {
+        setScapeState(prev => ({ ...prev, isDraft: false }));
       }
 
       Alert.alert('Success', 'Your scape has been published!', [
@@ -285,6 +282,23 @@ export default function ScapeEditorScreen() {
     } catch (error) {
       console.error('Error publishing scape:', error);
       Alert.alert('Error', 'Failed to publish scape');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleUpdatePublished = async () => {
+    if (!user) return;
+
+    setSaving(true);
+    try {
+      // Save the scape while preserving its published state
+      await saveScape(scapeState, user.id, true);
+
+      Alert.alert('Success', 'Published scape updated successfully');
+    } catch (error) {
+      console.error('Error updating scape:', error);
+      Alert.alert('Error', 'Failed to update scape');
     } finally {
       setSaving(false);
     }
@@ -321,14 +335,25 @@ export default function ScapeEditorScreen() {
           </TouchableOpacity>
           
           <View style={styles.headerActions}>
-            <Button
-              title="Draft"
-              variant="secondary"
-              size="sm"
-              onPress={handleSaveDraft}
-              disabled={!validation.canSaveDraft || saving}
-              loading={saving}
-            />
+            {scapeState.isDraft ? (
+              <Button
+                title="Draft"
+                variant="secondary"
+                size="sm"
+                onPress={handleSaveDraft}
+                disabled={!validation.canSaveDraft || saving}
+                loading={saving}
+              />
+            ) : (
+              <Button
+                title="Update"
+                variant="secondary"
+                size="sm"
+                onPress={handleUpdatePublished}
+                disabled={!validation.canSaveDraft || saving}
+                loading={saving}
+              />
+            )}
           </View>
         </View>
 
@@ -398,7 +423,7 @@ export default function ScapeEditorScreen() {
             style={[styles.addButton, theme.shadows.lg as any]}
           />
           
-          {validation.canPublish && (
+          {validation.canPublish && scapeState.isDraft && (
             <Button
               title="Publish"
               variant="primary"

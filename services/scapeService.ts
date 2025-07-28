@@ -60,7 +60,9 @@ export async function fetchFeed(
 ): Promise<FeedScape[]> {
   let request = supabase
     .from('scapes_feed_view')
-    .select('*');
+    .select('*')
+    .eq('is_published', true)      // Only published scapes
+    .eq('visibility', 'public');   // Only public scapes
 
   // Apply segment filters
   switch (segment) {
@@ -207,9 +209,9 @@ export async function getUserInteractions(scapeId: string, userId: string): Prom
 }
 
 // Save or update a scape
-export async function saveScape(scapeState: ScapeEditorState, userId: string): Promise<string> {
+export async function saveScape(scapeState: ScapeEditorState, userId: string, preservePublishedState: boolean = false): Promise<string> {
   const isNew = scapeState.id === 'new';
-  
+
   try {
     // Prepare scape data
     const scapeData = {
@@ -219,8 +221,9 @@ export async function saveScape(scapeState: ScapeEditorState, userId: string): P
       tagline: scapeState.tagline || null,
       banner_image_id: scapeState.banner,
       banner_static: scapeState.bannerStatic,
-      feature_widget_id: null, // TODO: Map custom widget IDs to database UUIDs
-      is_published: !scapeState.isDraft,
+      feature_widget_id: scapeState.featureWidgetId, // Use the actual feature widget ID
+      is_published: preservePublishedState ? undefined : !scapeState.isDraft, // Preserve published state if requested
+      visibility: scapeState.visibility || 'public',
       layout: 'default', // TODO: Add layout selection
       updated_at: new Date().toISOString(),
     };
@@ -258,8 +261,9 @@ export async function saveScape(scapeState: ScapeEditorState, userId: string): P
           .eq('scape_id', scapeId);
       }
 
-      // Insert new widgets
+      // Insert new widgets with their original IDs preserved
       const widgetData = scapeState.widgets.map((widget, index) => ({
+        id: widget.id, // Preserve the widget ID from the editor
         scape_id: scapeId,
         type: widget.type,
         variant: widget.variant,
@@ -285,13 +289,17 @@ export async function saveScape(scapeState: ScapeEditorState, userId: string): P
 }
 
 // Publish a scape with permissions
-export async function publishScape(scapeId: string, permissions: any = {}): Promise<void> {
+export async function publishScape(scapeId: string, options: {
+  visibility?: 'public' | 'private';
+  permissions?: any;
+} = {}): Promise<void> {
   try {
     const { error } = await supabase
       .from('scapes')
       .update({
         is_published: true,
-        ...permissions, // Include any permission/pricing settings
+        visibility: options.visibility || 'public',
+        ...options.permissions, // Include any permission/pricing settings
         updated_at: new Date().toISOString(),
       })
       .eq('id', scapeId);
@@ -327,12 +335,26 @@ export async function deleteScape(scapeId: string, userId: string): Promise<void
   if (error) throw error;
 }
 
-// Get user's scapes
-export async function getUserScapes(userId: string): Promise<FeedScape[]> {
+// Get user's scapes (including drafts)
+export async function getUserScapes(userId: string): Promise<any[]> {
   const { data, error } = await supabase
-    .from('scapes_feed_view')
-    .select('*')
-    .eq('creator_id', userId)
+    .from('scapes')
+    .select(`
+      id,
+      name as title,
+      description,
+      tagline,
+      banner_image_id,
+      is_published,
+      visibility,
+      view_count,
+      like_count,
+      save_count,
+      comment_count,
+      created_at,
+      updated_at
+    `)
+    .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
   if (error) {
