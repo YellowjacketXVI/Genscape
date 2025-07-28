@@ -32,7 +32,7 @@ import {
   createWidget,
   reorderWidgets
 } from '@/utils/widget-utils';
-import { getScapeById, saveScape } from '@/services/scapeService';
+import { getScapeById, saveScape, publishScape } from '@/services/scapeService';
 
 export default function ScapeEditorScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -253,18 +253,34 @@ export default function ScapeEditorScreen() {
 
     setSaving(true);
     try {
+      // First save the scape as a draft to get the ID
       const savedScapeId = await saveScape({
         ...scapeState,
-        isDraft: false,
+        isDraft: true, // Save as draft first
       }, user.id);
 
-      // Update state with the saved ID if it was a new scape
+      // Then publish it with any permissions/settings
+      await publishScape(savedScapeId, {
+        // Add any permission settings here when implemented
+        // gen_guard: scapeState.permissions?.genGuard,
+        // dataset_reuse: scapeState.permissions?.datasetReuse,
+        // visibility: scapeState.permissions?.visibility,
+      });
+
+      // Update state
       if (scapeState.id === 'new') {
         setScapeState(prev => ({ ...prev, id: savedScapeId, isDraft: false }));
       }
 
-      Alert.alert('Success', 'Scape published successfully', [
-        { text: 'OK', onPress: () => router.back() }
+      Alert.alert('Success', 'Your scape has been published!', [
+        {
+          text: 'View Scape',
+          onPress: () => router.push(`/scape/${savedScapeId}`)
+        },
+        {
+          text: 'Back to Manager',
+          onPress: () => router.push('/scape-manager')
+        }
       ]);
     } catch (error) {
       console.error('Error publishing scape:', error);

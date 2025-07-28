@@ -284,6 +284,26 @@ export async function saveScape(scapeState: ScapeEditorState, userId: string): P
   }
 }
 
+// Publish a scape with permissions
+export async function publishScape(scapeId: string, permissions: any = {}): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('scapes')
+      .update({
+        is_published: true,
+        ...permissions, // Include any permission/pricing settings
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', scapeId);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error publishing scape:', error);
+    throw error;
+  }
+}
+
+
 // Delete a scape
 export async function deleteScape(scapeId: string, userId: string): Promise<void> {
   // Verify ownership
