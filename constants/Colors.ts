@@ -1,5 +1,8 @@
-const tintColorLight = '#F15A29';
-const tintColorDark = '#F15A29';
+// Legacy Colors - Use theme/index.ts for new components
+import { colors } from '@/theme';
+
+const tintColorLight = colors.primary;
+const tintColorDark = colors.primary;
 
 export default {
   light: {
@@ -11,22 +14,23 @@ export default {
     cardBackground: '#FFFFFF',
   },
   dark: {
-    text: '#FFFFFF',
-    background: '#1A1A1A',
+    text: colors.textPrimary,
+    background: colors.background,
     tint: tintColorDark,
-    tabIconDefault: '#888',
+    tabIconDefault: colors.textMuted,
     tabIconSelected: tintColorDark,
-    cardBackground: '#2A2A2A',
+    cardBackground: colors.surface,
   },
-  primary: '#F15A29',
+  // Updated to use new theme colors
+  primary: colors.primary,
   background: {
-    dark: '#1A1A1A',
-    medium: '#2A2A2A',
-    light: '#333333',
+    dark: colors.background,
+    medium: colors.surface,
+    light: colors.cardBackground,
   },
   text: {
-    primary: '#FFFFFF',
-    secondary: '#BBBBBB',
-    muted: '#888888',
+    primary: colors.textPrimary,
+    secondary: colors.textSecondary,
+    muted: colors.textMuted,
   }
 };

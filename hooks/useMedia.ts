@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { MediaItem, MediaFilter, MediaSort, MediaUploadData } from '@/types/media';
 import { MediaService } from '@/services/mediaService';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,17 +12,19 @@ export function useMedia(initialFilter?: MediaFilter) {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<MediaFilter>(initialFilter || {});
   const [sort, setSort] = useState<MediaSort>({ field: 'created_at', direction: 'desc' });
+  const fetchingRef = useRef(false);
 
   const fetchMedia = useCallback(async () => {
-    if (!user) return;
+    if (!user || fetchingRef.current) return;
 
+    fetchingRef.current = true;
     setLoading(true);
     setError(null);
 
     try {
       const { data, error: fetchError } = await MediaService.getMediaItems(
         user.id,
-        filter.is_public !== undefined ? filter.is_public : true
+        false // Only fetch user's own media by default
       );
 
       if (fetchError) {
@@ -73,6 +75,7 @@ export function useMedia(initialFilter?: MediaFilter) {
       setError(err instanceof Error ? err.message : 'Failed to fetch media');
     } finally {
       setLoading(false);
+      fetchingRef.current = false;
     }
   }, [user, filter, sort]);
 
@@ -188,7 +191,7 @@ export function useMedia(initialFilter?: MediaFilter) {
   // Fetch media when dependencies change
   useEffect(() => {
     fetchMedia();
-  }, [fetchMedia]);
+  }, [user?.id, filter, sort]); // Use specific dependencies instead of fetchMedia
 
   return {
     mediaItems,

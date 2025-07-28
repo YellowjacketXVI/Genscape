@@ -1,7 +1,8 @@
 import { supabase } from '@/lib/supabase';
 import { MediaItem, MediaUploadData, MediaType } from '@/types/media';
 import * as ImagePicker from 'expo-image-picker';
-import { decode } from 'base64-arraybuffer';
+import { Platform } from 'react-native';
+// import { decode } from 'base64-arraybuffer';
 
 export class MediaService {
   static async uploadMedia(
@@ -18,10 +19,20 @@ export class MediaService {
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `${userId}/${fileName}`;
 
-      // Convert file to base64 for upload
-      const response = await fetch(file.uri);
-      const blob = await response.blob();
-      const arrayBuffer = await blob.arrayBuffer();
+      // Convert file to arrayBuffer for upload
+      let arrayBuffer: ArrayBuffer;
+
+      if (Platform.OS === 'web' && file.uri.startsWith('blob:')) {
+        // On web, fetch the blob URL to get the file data
+        const response = await fetch(file.uri);
+        const blob = await response.blob();
+        arrayBuffer = await blob.arrayBuffer();
+      } else {
+        // On native platforms, fetch the file URI
+        const response = await fetch(file.uri);
+        const blob = await response.blob();
+        arrayBuffer = await blob.arrayBuffer();
+      }
 
       // Upload file to Supabase Storage
       const { data: uploadResult, error: uploadError } = await supabase.storage
@@ -111,11 +122,39 @@ export class MediaService {
   }
 
   static async getMediaUrl(filePath: string): Promise<string> {
-    const { data } = supabase.storage
+    // Since the bucket is private, we need to use signed URLs
+    const { data, error } = await supabase.storage
       .from('media')
-      .getPublicUrl(filePath);
-    
-    return data.publicUrl;
+      .createSignedUrl(filePath, 3600); // 1 hour expiry
+
+    if (error) {
+      console.error('Error creating signed URL:', error);
+      // Fallback to public URL (might not work for private buckets)
+      const { data: publicData } = supabase.storage
+        .from('media')
+        .getPublicUrl(filePath);
+      return publicData.publicUrl;
+    }
+
+    return data.signedUrl;
+  }
+
+  static async refreshMediaUrls(mediaItems: MediaItem[]): Promise<MediaItem[]> {
+    // Refresh signed URLs for media items (useful when URLs expire)
+    return Promise.all(
+      mediaItems.map(async (item) => {
+        const url = await this.getMediaUrl(item.file_path);
+        const thumbnail_url = item.thumbnail_path
+          ? await this.getMediaUrl(item.thumbnail_path)
+          : null;
+
+        return {
+          ...item,
+          url,
+          thumbnail_url,
+        };
+      })
+    );
   }
 
   static async deleteMedia(mediaId: string, userId: string): Promise<{ error: any }> {
@@ -203,27 +242,128 @@ export class MediaService {
   }
 
   static async requestPermissions(): Promise<boolean> {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    return status === 'granted';
+    try {
+      if (Platform.OS === 'web') {
+        // On web, no explicit permission is needed for file picker
+        return true;
+      }
+
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      return status === 'granted';
+    } catch (error) {
+      console.error('Failed to request media permissions:', error);
+      return false;
+    }
   }
 
   static async pickMedia(allowsMultipleSelection = false): Promise<ImagePicker.ImagePickerAsset[]> {
-    const hasPermission = await this.requestPermissions();
-    if (!hasPermission) {
-      throw new Error('Media library permission denied');
-    }
+    try {
+      if (Platform.OS === 'web') {
+        return await this.pickMediaWeb(allowsMultipleSelection);
+      }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsMultipleSelection,
-      quality: 0.8,
-      videoQuality: ImagePicker.VideoQuality.High,
+      const hasPermission = await this.requestPermissions();
+      if (!hasPermission) {
+        throw new Error('Media library permission is required to upload files. Please enable it in your device settings.');
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
+        allowsMultipleSelection,
+        quality: 0.8,
+        allowsEditing: false,
+      });
+
+      if (result.canceled) {
+        return [];
+      }
+
+      if (!result.assets || result.assets.length === 0) {
+        return [];
+      }
+
+      return result.assets;
+    } catch (error) {
+      console.error('Failed to pick media:', error);
+      throw error;
+    }
+  }
+
+  static async pickMediaWeb(allowsMultipleSelection = false): Promise<ImagePicker.ImagePickerAsset[]> {
+    return new Promise((resolve, reject) => {
+      try {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*,video/*,audio/*';
+        input.multiple = allowsMultipleSelection;
+
+        input.onchange = async (event) => {
+          try {
+            const files = (event.target as HTMLInputElement).files;
+            if (!files || files.length === 0) {
+              resolve([]);
+              return;
+            }
+
+            const assets: ImagePicker.ImagePickerAsset[] = [];
+
+            for (let i = 0; i < files.length; i++) {
+              const file = files[i];
+              const uri = URL.createObjectURL(file);
+
+              // Create asset object compatible with ImagePicker.ImagePickerAsset
+              const asset: ImagePicker.ImagePickerAsset = {
+                uri,
+                fileName: file.name,
+                fileSize: file.size,
+                mimeType: file.type,
+                type: file.type.startsWith('image/') ? 'image' :
+                      file.type.startsWith('video/') ? 'video' : 'unknown',
+                width: undefined,
+                height: undefined,
+                duration: undefined,
+                assetId: undefined,
+              };
+
+              // For images, try to get dimensions
+              if (file.type.startsWith('image/')) {
+                try {
+                  const dimensions = await this.getImageDimensions(uri);
+                  asset.width = dimensions.width;
+                  asset.height = dimensions.height;
+                } catch (error) {
+                  console.warn('Could not get image dimensions:', error);
+                }
+              }
+
+              assets.push(asset);
+            }
+
+            resolve(assets);
+          } catch (error) {
+            reject(error);
+          }
+        };
+
+        input.oncancel = () => {
+          resolve([]);
+        };
+
+        input.click();
+      } catch (error) {
+        reject(error);
+      }
     });
+  }
 
-    if (result.canceled) {
-      return [];
-    }
-
-    return result.assets;
+  static async getImageDimensions(src: string): Promise<{ width: number; height: number }> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        resolve({ width: img.naturalWidth, height: img.naturalHeight });
+      };
+      img.onerror = reject;
+      img.src = src;
+    });
   }
 }

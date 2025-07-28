@@ -14,6 +14,8 @@ import { Upload, X, Tag, Globe, Lock } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 import { MediaUploadProps, MediaUploadData } from '@/types/media';
 import { useMedia } from '@/hooks/useMedia';
+import { MediaService } from '@/services/mediaService';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function MediaUpload({ 
   onUploadComplete, 
@@ -21,8 +23,9 @@ export default function MediaUpload({
   allowedTypes = ['image', 'video', 'audio'],
   maxFileSize = 50 * 1024 * 1024, // 50MB
 }: MediaUploadProps) {
-  const { pickAndUploadMedia, uploading } = useMedia();
+  const { uploadMedia, uploading } = useMedia();
   const [modalVisible, setModalVisible] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<ImagePicker.ImagePickerAsset[]>([]);
   const [uploadData, setUploadData] = useState<MediaUploadData>({
     name: '',
     description: '',
@@ -31,15 +34,43 @@ export default function MediaUpload({
   });
   const [tagInput, setTagInput] = useState('');
 
+  const handlePickFiles = async () => {
+    try {
+      // First, pick the files
+      const assets = await MediaService.pickMedia(true);
+
+      if (assets.length === 0) {
+        return; // User cancelled
+      }
+
+      // Set default name from first file
+      const defaultName = assets[0].fileName || `Media_${Date.now()}`;
+      setUploadData(prev => ({ ...prev, name: defaultName }));
+
+      // Store selected files temporarily
+      setSelectedFiles(assets);
+      setModalVisible(true);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to pick files';
+      onUploadError?.(errorMessage);
+      Alert.alert('File Selection Failed', errorMessage);
+    }
+  };
+
   const handleUpload = async () => {
     if (!uploadData.name.trim()) {
       Alert.alert('Error', 'Please enter a name for your media');
       return;
     }
 
+    if (!selectedFiles || selectedFiles.length === 0) {
+      Alert.alert('Error', 'No files selected');
+      return;
+    }
+
     try {
-      const uploadedItems = await pickAndUploadMedia(uploadData, true);
-      
+      const uploadedItems = await uploadMedia(selectedFiles, uploadData);
+
       if (uploadedItems.length > 0) {
         setModalVisible(false);
         resetForm();
@@ -61,6 +92,7 @@ export default function MediaUpload({
       is_public: false,
     });
     setTagInput('');
+    setSelectedFiles([]);
   };
 
   const addTag = () => {
@@ -82,7 +114,7 @@ export default function MediaUpload({
   };
 
   const openUploadModal = () => {
-    setModalVisible(true);
+    handlePickFiles();
   };
 
   const closeUploadModal = () => {
@@ -112,6 +144,25 @@ export default function MediaUpload({
           </View>
 
           <ScrollView style={styles.modalContent}>
+            {/* File Preview */}
+            {selectedFiles.length > 0 && (
+              <View style={styles.filePreviewContainer}>
+                <Text style={styles.label}>Selected Files ({selectedFiles.length})</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {selectedFiles.map((file, index) => (
+                    <View key={index} style={styles.filePreview}>
+                      <Text style={styles.fileName} numberOfLines={1}>
+                        {file.fileName || `File ${index + 1}`}
+                      </Text>
+                      <Text style={styles.fileSize}>
+                        {file.fileSize ? `${(file.fileSize / 1024 / 1024).toFixed(1)} MB` : 'Unknown size'}
+                      </Text>
+                    </View>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Name *</Text>
               <TextInput
@@ -273,6 +324,27 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 16,
+  },
+  filePreviewContainer: {
+    marginBottom: 20,
+  },
+  filePreview: {
+    backgroundColor: Colors.background.medium,
+    padding: 12,
+    borderRadius: 8,
+    marginRight: 12,
+    minWidth: 120,
+  },
+  fileName: {
+    fontFamily: 'Inter-Medium',
+    fontSize: 14,
+    color: Colors.text.primary,
+    marginBottom: 4,
+  },
+  fileSize: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 12,
+    color: Colors.text.secondary,
   },
   inputContainer: {
     marginBottom: 24,

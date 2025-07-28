@@ -52,7 +52,7 @@ export default function ScapeManagerScreen() {
   });
 
   const createNewScape = () => {
-    router.push('/scape-wizard');
+    router.push('/scape-editor/new');
   };
 
   return (
@@ -106,9 +106,9 @@ export default function ScapeManagerScreen() {
           data={filteredScapes}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <ScapeItem 
+            <ScapeItem
               item={item}
-              onEdit={() => {}}
+              onEdit={() => router.push(`/scape-editor/${item.id}`)}
               onDelete={() => {}}
             />
           )}

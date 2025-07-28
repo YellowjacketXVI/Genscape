@@ -1,19 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
-import { Grid2x2 as GridIcon, Database, Wand as Wand2, Search, Filter } from 'lucide-react-native';
+import { Grid2x2 as GridIcon, List, Database, Wand as Wand2, Search, Filter } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import Colors from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useMedia } from '@/hooks/useMedia';
 import { useAuth } from '@/contexts/AuthContext';
 import MediaUpload from '@/components/media/MediaUpload';
+import SimpleMediaUpload from '@/components/media/SimpleMediaUpload';
 import MediaGrid from '@/components/media/MediaGrid';
 import { MediaType } from '@/types/media';
+import Button from '@/components/ui/Button';
+import { StorageService, StorageData } from '@/services/storageService';
 
 export default function ContentManagerScreen() {
   const router = useRouter();
+  const theme = useTheme();
   const { user } = useAuth();
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   const [selectedType, setSelectedType] = useState<'all' | MediaType>('all');
+  const [storageData, setStorageData] = useState<StorageData>({
+    used: 0,
+    total: 50,
+    breakdown: { images: 0, videos: 0, audio: 0 }
+  });
 
   const {
     mediaItems,
@@ -22,9 +32,7 @@ export default function ContentManagerScreen() {
     deleteMedia,
     updateFilter,
     fetchMedia
-  } = useMedia({
-    media_type: selectedType === 'all' ? undefined : selectedType
-  });
+  } = useMedia(); // Start with no initial filter
 
   const handleFilterChange = (type: 'all' | MediaType) => {
     setSelectedType(type);
@@ -32,8 +40,15 @@ export default function ContentManagerScreen() {
   };
 
   const handleUploadComplete = () => {
-    fetchMedia();
+    // Media list will be automatically refreshed by the uploadMedia function
+    // No need to manually call fetchMedia here
   };
+
+  // Calculate storage data when media items change
+  useEffect(() => {
+    const newStorageData = StorageService.calculateStorageFromMediaItems(mediaItems);
+    setStorageData(newStorageData);
+  }, [mediaItems]);
 
   const handleDeleteMedia = async (item: any) => {
     try {
@@ -43,18 +58,73 @@ export default function ContentManagerScreen() {
     }
   };
 
+  const getStoragePercentage = () => {
+    return StorageService.getStoragePercentage(storageData.used, storageData.total);
+  };
+
+  const getStorageColor = () => {
+    const percentage = getStoragePercentage();
+    return StorageService.getStorageColor(percentage);
+  };
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Your Content</Text>
+        <Text style={[styles.headerTitle, { color: theme.colors.textPrimary }]}>Your Content</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity
-            style={styles.viewModeButton}
+            style={[styles.viewModeButton, { backgroundColor: theme.colors.surface }]}
             onPress={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
           >
-            <GridIcon size={20} color={Colors.text.primary} />
+            {viewMode === 'grid' ? (
+              <List size={20} color={theme.colors.textPrimary} />
+            ) : (
+              <GridIcon size={20} color={theme.colors.textPrimary} />
+            )}
           </TouchableOpacity>
+          <SimpleMediaUpload onUploadComplete={handleUploadComplete} />
           <MediaUpload onUploadComplete={handleUploadComplete} />
+        </View>
+      </View>
+
+      {/* Storage Indicator */}
+      <View style={[styles.storageSection, { backgroundColor: theme.colors.surface }]}>
+        <View style={styles.storageHeader}>
+          <Text style={[styles.storageTitle, { color: theme.colors.textPrimary }]}>Storage</Text>
+          <Text style={[styles.storageText, { color: theme.colors.textSecondary }]}>
+            {storageData.used} GB of {storageData.total} GB used
+          </Text>
+        </View>
+        <View style={[styles.storageBar, { backgroundColor: theme.colors.border }]}>
+          <View
+            style={[
+              styles.storageProgress,
+              {
+                width: `${getStoragePercentage()}%`,
+                backgroundColor: getStorageColor(),
+              }
+            ]}
+          />
+        </View>
+        <View style={styles.storageBreakdown}>
+          <View style={styles.breakdownItem}>
+            <View style={[styles.breakdownDot, { backgroundColor: theme.colors.primary }]} />
+            <Text style={[styles.breakdownText, { color: theme.colors.textSecondary }]}>
+              Images: {storageData.breakdown.images} GB
+            </Text>
+          </View>
+          <View style={styles.breakdownItem}>
+            <View style={[styles.breakdownDot, { backgroundColor: theme.colors.accent }]} />
+            <Text style={[styles.breakdownText, { color: theme.colors.textSecondary }]}>
+              Videos: {storageData.breakdown.videos} GB
+            </Text>
+          </View>
+          <View style={styles.breakdownItem}>
+            <View style={[styles.breakdownDot, { backgroundColor: theme.colors.secondary }]} />
+            <Text style={[styles.breakdownText, { color: theme.colors.textSecondary }]}>
+              Audio: {storageData.breakdown.audio} GB
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -128,7 +198,6 @@ export default function ContentManagerScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.dark,
   },
   header: {
     flexDirection: 'row',
@@ -141,15 +210,64 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontFamily: 'Inter-Bold',
     fontSize: 24,
-    color: Colors.text.primary,
   },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
   },
   viewModeButton: {
     padding: 8,
+    borderRadius: 8,
     marginRight: 12,
+  },
+  storageSection: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    padding: 16,
+    borderRadius: 12,
+  },
+  storageHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  storageTitle: {
+    fontFamily: 'Inter-Bold',
+    fontSize: 16,
+  },
+  storageText: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 14,
+  },
+  storageBar: {
+    height: 8,
+    borderRadius: 4,
+    marginBottom: 12,
+    overflow: 'hidden',
+  },
+  storageProgress: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  storageBreakdown: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  breakdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  breakdownDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 6,
+  },
+  breakdownText: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 12,
   },
   uploadButton: {
     flexDirection: 'row',

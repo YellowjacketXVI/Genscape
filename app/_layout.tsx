@@ -5,6 +5,7 @@ import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_700Bold } from '@expo-google-fonts/inter';
 import * as SplashScreen from 'expo-splash-screen';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import AuthGuard from '@/components/auth/AuthGuard';
 
 // Keep splash screen visible while loading fonts
@@ -36,8 +37,9 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <AuthGuard>
+    <ThemeProvider>
+      <AuthProvider>
+        <AuthGuard>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="auth/login" options={{ headerShown: false }} />
@@ -67,10 +69,12 @@ export default function RootLayout() {
             },
           }} />
           <Stack.Screen name="scape-wizard" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="scape-editor" options={{ presentation: 'modal' }} />
           <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style="light" />
-      </AuthGuard>
-    </AuthProvider>
+        </AuthGuard>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
