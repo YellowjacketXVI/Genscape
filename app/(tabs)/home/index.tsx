@@ -1,87 +1,133 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, FlatList, Image, TouchableOpacity, RefreshControl, Alert, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Heart, MessageSquare, Share2, Bookmark, Search, Bell, LogOut, User } from 'lucide-react-native';
-import Colors from '@/constants/Colors';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
-// import FeedLayout, { FeedCard } from '@/components/scape/FeedLayout';
+import FeedLayout, { FeedCard } from '@/components/scape/FeedLayout';
 import SegmentedControl from '@/components/ui/SegmentedControl';
 import Button from '@/components/ui/Button';
 import Avatar from '@/components/ui/Avatar';
-
-// Mock data for demonstration
-const FEED_DATA = [
-  {
-    id: '1',
-    username: 'creative_minds',
-    title: 'Digital Dreams',
-    description: 'A collection of AI-generated landscapes',
-    coverImage: 'https://images.pexels.com/photos/1366957/pexels-photo-1366957.jpeg',
-    avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg',
-    likes: 128,
-    comments: 32,
-    saved: false,
-    liked: false,
-    following: false,
-    hasShop: true,
-    isGenId: false,
-  },
-  {
-    id: '2',
-    username: 'future_visions',
-    title: 'Neon City',
-    description: 'Futuristic cityscapes with a cyberpunk aesthetic',
-    coverImage: 'https://images.pexels.com/photos/3052361/pexels-photo-3052361.jpeg',
-    avatar: 'https://images.pexels.com/photos/1040880/pexels-photo-1040880.jpeg',
-    likes: 256,
-    comments: 48,
-    saved: true,
-    liked: true,
-    following: true,
-    hasShop: false,
-    isGenId: true,
-  },
-  {
-    id: '3',
-    username: 'audio_creator',
-    title: 'Ambient Soundscapes',
-    description: 'AI-generated ambient music for relaxation',
-    coverImage: 'https://images.pexels.com/photos/3721941/pexels-photo-3721941.jpeg',
-    avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg',
-    likes: 89,
-    comments: 15,
-    saved: false,
-    liked: false,
-    following: false,
-    hasShop: true,
-    isGenId: false,
-  },
-];
+import LoadingScreen from '@/components/ui/LoadingScreen';
+import { fetchFeed, FeedScape } from '@/services/scapeService';
+import { toggleLike, toggleSave, toggleFollow, getUserInteractions } from '@/services/feedService';
+import Colors from '@/constants/Colors';
 
 type FeedSegment = 'explore' | 'followed' | 'shop' | 'genId';
+
+interface FeedItem extends FeedScape {
+  // Add interaction states
+  liked: boolean;
+  saved: boolean;
+  following: boolean;
+}
 
 export default function HomeScreen() {
   const router = useRouter();
   const theme = useTheme();
   const { user, profile, signOut } = useAuth();
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [feedData, setFeedData] = useState(FEED_DATA);
+  const [feedData, setFeedData] = useState<FeedItem[]>([]);
   const [segment, setSegment] = useState<FeedSegment>('explore');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const handleRefresh = () => {
-    setRefreshing(true);
-    // Simulate a refresh
-    setTimeout(() => {
+  // Load feed data
+  const loadFeed = async () => {
+    if (!user) return;
+
+    try {
+      setRefreshing(true);
+      const data = await fetchFeed(segment, searchQuery.trim(), user.id);
+
+      // Get user interactions for each scape
+      const feedWithInteractions = await Promise.all(
+        data.map(async (scape) => {
+          const interactions = await getUserInteractions(scape.id, user.id);
+          return {
+            ...scape,
+            liked: interactions.isLiked,
+            saved: interactions.isSaved,
+            following: interactions.isFollowing,
+          };
+        })
+      );
+
+      setFeedData(feedWithInteractions);
+    } catch (error) {
+      console.error('Error loading feed:', error);
+      Alert.alert('Error', 'Failed to load feed');
+    } finally {
       setRefreshing(false);
-    }, 1500);
+      setLoading(false);
+    }
   };
 
-  const toggleSave = (id: string) => {
-    setFeedData(feedData.map(item =>
-      item.id === id ? { ...item, saved: !item.saved } : item
-    ));
+  useEffect(() => {
+    loadFeed();
+  }, [segment, user]);
+
+  useEffect(() => {
+    // Debounce search
+    const timeoutId = setTimeout(() => {
+      if (user) loadFeed();
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  const handleRefresh = () => {
+    loadFeed();
+  };
+
+  const handleSave = async (scapeId: string) => {
+    if (!user) return;
+
+    try {
+      const newSavedState = await toggleSave(scapeId, user.id);
+      setFeedData(prev => prev.map(item =>
+        item.id === scapeId ? { ...item, saved: newSavedState } : item
+      ));
+    } catch (error) {
+      console.error('Error toggling save:', error);
+      Alert.alert('Error', 'Failed to save scape');
+    }
+  };
+
+  const handleLike = async (scapeId: string) => {
+    if (!user) return;
+
+    try {
+      const newLikedState = await toggleLike(scapeId, user.id);
+      setFeedData(prev => prev.map(item =>
+        item.id === scapeId
+          ? {
+              ...item,
+              liked: newLikedState,
+              like_count: item.like_count + (newLikedState ? 1 : -1)
+            }
+          : item
+      ));
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      Alert.alert('Error', 'Failed to like scape');
+    }
+  };
+
+  const handleFollow = async (creatorId: string) => {
+    if (!user) return;
+
+    try {
+      const newFollowingState = await toggleFollow(creatorId, user.id);
+      setFeedData(prev => prev.map(item =>
+        item.creator_id === creatorId
+          ? { ...item, following: newFollowingState }
+          : item
+      ));
+    } catch (error) {
+      console.error('Error toggling follow:', error);
+      Alert.alert('Error', 'Failed to follow user');
+    }
   };
 
   const handleLogout = () => {
@@ -104,56 +150,13 @@ export default function HomeScreen() {
     );
   };
 
-  const handleLike = (scapeId: string) => {
-    setFeedData(prev => prev.map(item =>
-      item.id === scapeId
-        ? { ...item, likes: item.likes + (item.liked ? -1 : 1), liked: !item.liked }
-        : item
-    ));
-  };
-
-  const handleFollow = (creatorId: string, isFollowing: boolean) => {
-    setFeedData(prev => prev.map(item =>
-      item.username === creatorId
-        ? { ...item, following: !isFollowing }
-        : item
-    ));
-  };
-
   const handleOpenScape = (scapeId: string) => {
     router.push(`/scape/${scapeId}`);
   };
 
-  const getFilteredFeedData = () => {
-    let filtered = feedData;
-
-    // Filter by segment
-    switch (segment) {
-      case 'followed':
-        filtered = filtered.filter(item => item.following);
-        break;
-      case 'shop':
-        filtered = filtered.filter(item => item.hasShop);
-        break;
-      case 'genId':
-        filtered = filtered.filter(item => item.isGenId);
-        break;
-      default: // explore
-        break;
-    }
-
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(item =>
-        item.title.toLowerCase().includes(query) ||
-        item.description.toLowerCase().includes(query) ||
-        item.username.toLowerCase().includes(query)
-      );
-    }
-
-    return filtered;
-  };
+  if (loading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -203,35 +206,39 @@ export default function HomeScreen() {
         />
       </View>
 
-      <FlatList
-        data={getFilteredFeedData()}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <ScapeCard
-            item={item}
-            onSave={() => toggleSave(item.id)}
-            onLike={() => handleLike(item.id)}
-            onFollow={() => handleFollow(item.username, item.following)}
-            onOpenScape={() => handleOpenScape(item.id)}
-          />
-        )}
-        contentContainerStyle={styles.feedContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor={theme.colors.primary}
-            colors={[theme.colors.primary]}
-          />
-        }
-        showsVerticalScrollIndicator={false}
-      />
+      <FeedLayout>
+        <FlatList
+          data={feedData}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <FeedCard>
+              <ScapeCard
+                item={item}
+                onSave={() => handleSave(item.id)}
+                onLike={() => handleLike(item.id)}
+                onFollow={() => handleFollow(item.creator_id)}
+                onOpenScape={() => handleOpenScape(item.id)}
+              />
+            </FeedCard>
+          )}
+          contentContainerStyle={styles.feedContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={theme.colors.primary}
+              colors={[theme.colors.primary]}
+            />
+          }
+          showsVerticalScrollIndicator={false}
+        />
+      </FeedLayout>
     </View>
   );
 }
 
 interface ScapeCardProps {
-  item: any;
+  item: FeedItem;
   onSave: () => void;
   onLike: () => void;
   onFollow: () => void;
@@ -241,11 +248,34 @@ interface ScapeCardProps {
 function ScapeCard({ item, onSave, onLike, onFollow, onOpenScape }: ScapeCardProps) {
   const theme = useTheme();
 
+  // Get cover image URL - handle both file path and direct URL
+  const getCoverImageUrl = () => {
+    if (!item.cover_image_path) return null;
+
+    // If it's already a full URL, use it directly
+    if (item.cover_image_path.startsWith('http')) {
+      return item.cover_image_path;
+    }
+
+    // Otherwise, construct Supabase storage URL
+    return `https://msinxqvqjzlappkumynm.supabase.co/storage/v1/object/public/media/${item.cover_image_path}`;
+  };
+
+  const getAvatarUrl = () => {
+    if (!item.creator_avatar) return null;
+
+    if (item.creator_avatar.startsWith('http')) {
+      return item.creator_avatar;
+    }
+
+    return `https://msinxqvqjzlappkumynm.supabase.co/storage/v1/object/public/media/${item.creator_avatar}`;
+  };
+
   return (
-    <View style={[styles.scapeCard, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.cardBorder }]}>
+    <View style={styles.cardContainer}>
       <TouchableOpacity onPress={onOpenScape} activeOpacity={0.9}>
         <Image
-          source={{ uri: item.coverImage }}
+          source={{ uri: getCoverImageUrl() || 'https://images.pexels.com/photos/1366957/pexels-photo-1366957.jpeg' }}
           style={styles.cardImage}
           resizeMode="cover"
         />
@@ -255,11 +285,13 @@ function ScapeCard({ item, onSave, onLike, onFollow, onOpenScape }: ScapeCardPro
         <View style={styles.cardHeader}>
           <View style={styles.userInfo}>
             <Avatar
-              source={{ uri: item.avatar }}
+              source={{ uri: getAvatarUrl() }}
               size="sm"
-              fallbackText={item.username}
+              fallbackText={item.creator_username || 'U'}
             />
-            <Text style={[styles.username, { color: theme.colors.textPrimary }]}>@{item.username}</Text>
+            <Text style={[styles.username, { color: theme.colors.textPrimary }]}>
+              @{item.creator_username}
+            </Text>
           </View>
           <Button
             title={item.following ? 'Following' : 'Follow'}
@@ -270,7 +302,9 @@ function ScapeCard({ item, onSave, onLike, onFollow, onOpenScape }: ScapeCardPro
         </View>
 
         <Text style={[styles.cardTitle, { color: theme.colors.textPrimary }]}>{item.title}</Text>
-        <Text style={[styles.cardDescription, { color: theme.colors.textSecondary }]}>{item.description}</Text>
+        <Text style={[styles.cardDescription, { color: theme.colors.textSecondary }]}>
+          {item.description || ''}
+        </Text>
 
         <View style={styles.cardFooter}>
           <TouchableOpacity style={styles.statItem} onPress={onLike}>
@@ -279,11 +313,15 @@ function ScapeCard({ item, onSave, onLike, onFollow, onOpenScape }: ScapeCardPro
               fill={item.liked ? theme.colors.primary : 'none'}
               color={item.liked ? theme.colors.primary : theme.colors.textSecondary}
             />
-            <Text style={[styles.statText, { color: theme.colors.textSecondary }]}>{item.likes}</Text>
+            <Text style={[styles.statText, { color: theme.colors.textSecondary }]}>
+              {item.like_count}
+            </Text>
           </TouchableOpacity>
           <View style={styles.statItem}>
             <MessageSquare size={20} color={theme.colors.textSecondary} />
-            <Text style={[styles.statText, { color: theme.colors.textSecondary }]}>{item.comments}</Text>
+            <Text style={[styles.statText, { color: theme.colors.textSecondary }]}>
+              {item.comment_count}
+            </Text>
           </View>
           <TouchableOpacity style={styles.statItem}>
             <Share2 size={20} color={theme.colors.textSecondary} />
@@ -358,17 +396,13 @@ const styles = StyleSheet.create({
   feedContent: {
     paddingBottom: 80, // Account for tab bar
   },
-  scapeCard: {
-    backgroundColor: 'transparent',
-    borderRadius: 12,
-    marginHorizontal: 16,
-    marginBottom: 24,
+  cardContainer: {
     overflow: 'hidden',
-    borderWidth: 1,
   },
   cardImage: {
     width: '100%',
-    height: 300, // Increased height for the larger card
+    height: '60%', // Use percentage for responsive height
+    minHeight: 200,
   },
   cardContent: {
     padding: 16,

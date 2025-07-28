@@ -11,7 +11,7 @@ import {
   Modal,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, Plus, Star, Camera } from 'lucide-react-native';
+import { ArrowLeft, Plus, Star, Camera, Check, X, Loader } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { ChannelProvider } from '@/contexts/ChannelContext';
@@ -20,16 +20,19 @@ import LoadingScreen from '@/components/ui/LoadingScreen';
 import WidgetSelectionPanel from '@/components/scape/WidgetSelectionPanel';
 import WidgetCard from '@/components/scape/WidgetCard';
 import BannerSelector from '@/components/scape/BannerSelector';
-import { 
-  ScapeEditorState, 
+import ReorderableWidgetList from '@/components/scape/DraggableWidgetList';
+import {
+  ScapeEditorState,
   ScapeEditorWidget,
-  ScapeValidationResult 
+  ScapeValidationResult
 } from '@/types/scape-editor';
-import { 
-  validateScape, 
+import {
+  validateScape,
+  validateScapeAsync,
   createWidget,
-  reorderWidgets 
+  reorderWidgets
 } from '@/utils/widget-utils';
+import { getScapeById, saveScape } from '@/services/scapeService';
 
 export default function ScapeEditorScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -54,27 +57,55 @@ export default function ScapeEditorScreen() {
   const [showTitleEditor, setShowTitleEditor] = useState(false);
   const [showBannerSelector, setShowBannerSelector] = useState(false);
   const [tempTitle, setTempTitle] = useState('');
-  const [validation, setValidation] = useState<ScapeValidationResult>({
+  const [validation, setValidation] = useState<ScapeValidationResult & { nameIsUnique?: boolean }>({
     isValid: false,
     errors: [],
     canSaveDraft: false,
     canPublish: false,
+    nameIsUnique: true,
   });
+  const [nameCheckLoading, setNameCheckLoading] = useState(false);
 
   useEffect(() => {
     loadScape();
   }, [id]);
 
   useEffect(() => {
-    // Update validation whenever scape state changes
-    const newValidation = validateScape(
+    // Basic validation first (immediate)
+    const basicValidation = validateScape(
       scapeState.title,
       scapeState.widgets,
       scapeState.featureWidgetId,
       scapeState.tagline
     );
-    setValidation(newValidation);
+    setValidation(prev => ({ ...basicValidation, nameIsUnique: prev.nameIsUnique }));
   }, [scapeState]);
+
+  // Debounced async validation for name uniqueness
+  useEffect(() => {
+    if (!user || !scapeState.title.trim()) return;
+
+    const timeoutId = setTimeout(async () => {
+      setNameCheckLoading(true);
+      try {
+        const asyncValidation = await validateScapeAsync(
+          scapeState.title,
+          scapeState.widgets,
+          scapeState.featureWidgetId,
+          scapeState.tagline,
+          user.id,
+          scapeState.id !== 'new' ? scapeState.id : undefined
+        );
+        setValidation(asyncValidation);
+      } catch (error) {
+        console.error('Validation error:', error);
+      } finally {
+        setNameCheckLoading(false);
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [scapeState.title, user]);
 
   const loadScape = async () => {
     try {
@@ -85,11 +116,27 @@ export default function ScapeEditorScreen() {
           title: 'Untitled Scape',
         }));
       } else {
-        // TODO: Load existing scape from API
-        // For now, simulate loading
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Load existing scape from API
+        const scape = await getScapeById(id, user?.id);
+        if (scape) {
+          setScapeState({
+            id: scape.id,
+            title: scape.title,
+            description: scape.description,
+            banner: scape.banner_image_id,
+            bannerStatic: scape.banner_static,
+            widgets: scape.widgets,
+            featureWidgetId: scape.feature_widget_id,
+            tagline: scape.tagline,
+            isDraft: !scape.is_published,
+          });
+        } else {
+          Alert.alert('Error', 'Scape not found');
+          router.back();
+        }
       }
     } catch (error) {
+      console.error('Error loading scape:', error);
       Alert.alert('Error', 'Failed to load scape');
       router.back();
     } finally {
@@ -159,23 +206,39 @@ export default function ScapeEditorScreen() {
     }));
   };
 
-  const handleBannerSelect = (mediaUrl: string) => {
-    setScapeState(prev => ({ ...prev, banner: mediaUrl }));
+  const handleReorderWidgets = (reorderedWidgets: ScapeEditorWidget[]) => {
+    setScapeState(prev => ({
+      ...prev,
+      widgets: reorderedWidgets,
+    }));
+  };
+
+  const handleBannerSelect = (mediaId: string) => {
+    setScapeState(prev => ({ ...prev, banner: mediaId }));
     setShowBannerSelector(false);
   };
 
   const handleSaveDraft = async () => {
-    if (!validation.canSaveDraft) {
+    if (!validation.canSaveDraft || !user) {
       Alert.alert('Cannot Save', validation.errors.join('\n'));
       return;
     }
 
     setSaving(true);
     try {
-      // TODO: Save to API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const savedScapeId = await saveScape({
+        ...scapeState,
+        isDraft: true,
+      }, user.id);
+
+      // Update state with the saved ID if it was a new scape
+      if (scapeState.id === 'new') {
+        setScapeState(prev => ({ ...prev, id: savedScapeId }));
+      }
+
       Alert.alert('Success', 'Draft saved successfully');
     } catch (error) {
+      console.error('Error saving draft:', error);
       Alert.alert('Error', 'Failed to save draft');
     } finally {
       setSaving(false);
@@ -183,19 +246,28 @@ export default function ScapeEditorScreen() {
   };
 
   const handlePublish = async () => {
-    if (!validation.canPublish) {
+    if (!validation.canPublish || !user) {
       Alert.alert('Cannot Publish', validation.errors.join('\n'));
       return;
     }
 
     setSaving(true);
     try {
-      // TODO: Publish to API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const savedScapeId = await saveScape({
+        ...scapeState,
+        isDraft: false,
+      }, user.id);
+
+      // Update state with the saved ID if it was a new scape
+      if (scapeState.id === 'new') {
+        setScapeState(prev => ({ ...prev, id: savedScapeId, isDraft: false }));
+      }
+
       Alert.alert('Success', 'Scape published successfully', [
         { text: 'OK', onPress: () => router.back() }
       ]);
     } catch (error) {
+      console.error('Error publishing scape:', error);
       Alert.alert('Error', 'Failed to publish scape');
     } finally {
       setSaving(false);
@@ -219,6 +291,17 @@ export default function ScapeEditorScreen() {
             <Text style={[styles.title, { color: theme.colors.textPrimary }]}>
               {scapeState.title}
             </Text>
+            {scapeState.title.trim() && (
+              <View style={styles.validationIndicator}>
+                {nameCheckLoading ? (
+                  <Loader size={16} color={theme.colors.textSecondary} />
+                ) : validation.nameIsUnique ? (
+                  <Check size={16} color={theme.colors.success} />
+                ) : (
+                  <X size={16} color={theme.colors.error} />
+                )}
+              </View>
+            )}
           </TouchableOpacity>
           
           <View style={styles.headerActions}>
@@ -255,16 +338,14 @@ export default function ScapeEditorScreen() {
 
           {/* Widgets */}
           <View style={styles.widgetsSection}>
-            {scapeState.widgets.map((widget, index) => (
-              <WidgetCard
-                key={widget.id}
-                widget={widget}
-                isFeature={scapeState.featureWidgetId === widget.id}
-                onUpdate={handleUpdateWidget}
-                onDelete={() => handleDeleteWidget(widget.id)}
-                onSetFeature={() => handleSetFeatureWidget(widget.id)}
-              />
-            ))}
+            <ReorderableWidgetList
+              widgets={scapeState.widgets}
+              onReorder={handleReorderWidgets}
+              onUpdateWidget={handleUpdateWidget}
+              onDeleteWidget={handleDeleteWidget}
+              onSetFeatureWidget={handleSetFeatureWidget}
+              featureWidgetId={scapeState.featureWidgetId}
+            />
           </View>
 
           {/* Feature Widget Tagline */}
@@ -386,11 +467,17 @@ const styles = StyleSheet.create({
   titleContainer: {
     flex: 1,
     marginHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     fontSize: 18,
     fontFamily: 'Inter-Medium',
     textAlign: 'center',
+  },
+  validationIndicator: {
+    marginLeft: 8,
   },
   headerActions: {
     flexDirection: 'row',

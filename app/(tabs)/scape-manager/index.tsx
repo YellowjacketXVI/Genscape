@@ -1,59 +1,88 @@
-import { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, FlatList, Image } from 'react-native';
+import { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, FlatList, Image, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Plus, CirclePlus as PlusCircle, CreditCard as Edit2, Trash2 } from 'lucide-react-native';
+import { Plus, CirclePlus as PlusCircle, CreditCard as Edit2, Trash2, Eye, EyeOff } from 'lucide-react-native';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/contexts/AuthContext';
+import LoadingScreen from '@/components/ui/LoadingScreen';
+import { getUserScapes, deleteScape, FeedScape } from '@/services/scapeService';
 import Colors from '@/constants/Colors';
-
-// Mock data for demonstration
-const SCAPES_DATA = [
-  {
-    id: '1',
-    title: 'Digital Dreams',
-    description: 'A collection of AI-generated landscapes',
-    coverImage: 'https://images.pexels.com/photos/1366957/pexels-photo-1366957.jpeg',
-    widgetCount: 5,
-    viewCount: 128,
-    isPublished: true,
-    isFollowing: true,
-  },
-  {
-    id: '2',
-    title: 'Neon City',
-    description: 'Futuristic cityscapes with a cyberpunk aesthetic',
-    coverImage: 'https://images.pexels.com/photos/3052361/pexels-photo-3052361.jpeg',
-    widgetCount: 3,
-    viewCount: 256,
-    isPublished: true,
-    isFollowing: false,
-  },
-  {
-    id: '3',
-    title: 'Ambient Soundscapes',
-    description: 'AI-generated ambient music for relaxation',
-    coverImage: 'https://images.pexels.com/photos/3721941/pexels-photo-3721941.jpeg',
-    widgetCount: 6,
-    viewCount: 89,
-    isPublished: false,
-    isFollowing: false,
-  },
-];
 
 export default function ScapeManagerScreen() {
   const router = useRouter();
-  const [scapes, setScapes] = useState(SCAPES_DATA);
-  const [filter, setFilter] = useState('all'); // 'all', 'following', 'published', 'drafts'
+  const theme = useTheme();
+  const { user } = useAuth();
+  const [scapes, setScapes] = useState<FeedScape[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all'); // 'all', 'published', 'drafts'
+
+  useEffect(() => {
+    loadScapes();
+  }, [user]);
+
+  const loadScapes = async () => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      const userScapes = await getUserScapes(user.id);
+      setScapes(userScapes);
+    } catch (error) {
+      console.error('Error loading scapes:', error);
+      Alert.alert('Error', 'Failed to load scapes');
+    } finally {
+      setLoading(false);
+    }
+  };
   
   const filteredScapes = scapes.filter((scape) => {
     if (filter === 'all') return true;
-    if (filter === 'following') return scape.isFollowing;
-    if (filter === 'published') return scape.isPublished;
-    if (filter === 'drafts') return !scape.isPublished;
+    if (filter === 'published') return scape.is_published;
+    if (filter === 'drafts') return !scape.is_published;
     return true;
   });
 
   const createNewScape = () => {
     router.push('/scape-editor/new');
   };
+
+  const handleEditScape = (id: string) => {
+    router.push(`/scape-editor/${id}`);
+  };
+
+  const handleDeleteScape = async (id: string) => {
+    if (!user) return;
+
+    Alert.alert(
+      'Delete Scape',
+      'Are you sure you want to delete this scape? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteScape(id, user.id);
+              setScapes(prev => prev.filter(scape => scape.id !== id));
+              Alert.alert('Success', 'Scape deleted successfully');
+            } catch (error) {
+              console.error('Error deleting scape:', error);
+              Alert.alert('Error', 'Failed to delete scape');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleViewScape = (id: string) => {
+    router.push(`/scape/${id}`);
+  };
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <View style={styles.container}>
@@ -72,12 +101,7 @@ export default function ScapeManagerScreen() {
         >
           <Text style={[styles.filterText, filter === 'all' && styles.filterTextActive]}>All</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.filterButton, filter === 'following' && styles.filterActive]}
-          onPress={() => setFilter('following')}
-        >
-          <Text style={[styles.filterText, filter === 'following' && styles.filterTextActive]}>Following</Text>
-        </TouchableOpacity>
+
         <TouchableOpacity 
           style={[styles.filterButton, filter === 'published' && styles.filterActive]}
           onPress={() => setFilter('published')}

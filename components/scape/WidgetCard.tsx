@@ -24,6 +24,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { ScapeEditorWidget, ChannelColor } from '@/types/scape-editor';
 import { getChannelColor } from '@/utils/widget-utils';
 import ChannelSelector from './ChannelSelector';
+import WidgetEditor from './WidgetEditor';
 
 interface WidgetCardProps {
   widget: ScapeEditorWidget;
@@ -53,6 +54,7 @@ export default function WidgetCard({
 }: WidgetCardProps) {
   const theme = useTheme();
   const [showActions, setShowActions] = useState(false);
+  const [showEditor, setShowEditor] = useState(false);
 
   const IconComponent = WIDGET_ICONS[widget.type] || ImageIcon;
 
@@ -64,8 +66,11 @@ export default function WidgetCard({
   };
 
   const handleEdit = () => {
-    // TODO: Open widget editor modal
-    Alert.alert('Edit Widget', 'Widget editor coming soon');
+    setShowEditor(true);
+  };
+
+  const handleSaveWidget = (updatedWidget: ScapeEditorWidget) => {
+    onUpdate(updatedWidget);
   };
 
   const handleDelete = () => {
@@ -243,6 +248,13 @@ export default function WidgetCard({
           </TouchableOpacity>
         </View>
       )}
+
+      <WidgetEditor
+        widget={widget}
+        isVisible={showEditor}
+        onClose={() => setShowEditor(false)}
+        onSave={handleSaveWidget}
+      />
     </View>
   );
 }

@@ -17,7 +17,7 @@ import { MediaItem } from '@/types/media';
 interface BannerSelectorProps {
   isVisible: boolean;
   onClose: () => void;
-  onSelect: (mediaUrl: string) => void;
+  onSelect: (mediaId: string) => void;
 }
 
 export default function BannerSelector({
@@ -48,8 +48,8 @@ export default function BannerSelector({
   };
 
   const handleConfirmSelection = () => {
-    if (selectedMedia?.url) {
-      onSelect(selectedMedia.url);
+    if (selectedMedia?.id) {
+      onSelect(selectedMedia.id);
     }
   };
 

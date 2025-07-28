@@ -5,6 +5,7 @@ import {
   ScapeValidationResult,
   WIDGET_HIERARCHY
 } from '@/types/scape-editor';
+import { checkScapeNameUnique } from '@/services/feedService';
 
 export function generateWidgetId(): string {
   return `widget_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -162,6 +163,49 @@ export function validateScape(
   };
 }
 
+/**
+ * Async validation that includes unique name checking
+ */
+export async function validateScapeAsync(
+  title: string,
+  widgets: ScapeEditorWidget[],
+  featureWidgetId: string | null,
+  tagline: string,
+  userId: string,
+  excludeScapeId?: string
+): Promise<ScapeValidationResult & { nameIsUnique: boolean }> {
+  const errors: string[] = [];
+  let nameIsUnique = true;
+
+  // Basic validation first
+  const basicValidation = validateScape(title, widgets, featureWidgetId, tagline);
+  errors.push(...basicValidation.errors);
+
+  // Check name uniqueness
+  if (title.trim()) {
+    try {
+      nameIsUnique = await checkScapeNameUnique(title.trim(), userId, excludeScapeId);
+      if (!nameIsUnique) {
+        errors.push('A scape with this name already exists');
+      }
+    } catch (error) {
+      console.error('Error checking name uniqueness:', error);
+      // Don't block on uniqueness check failure
+    }
+  }
+
+  const canSaveDraft = basicValidation.canSaveDraft && nameIsUnique;
+  const canPublish = basicValidation.canPublish && nameIsUnique;
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    canSaveDraft,
+    canPublish,
+    nameIsUnique,
+  };
+}
+
 export function reorderWidgets(
   widgets: ScapeEditorWidget[],
   fromIndex: number,
@@ -170,7 +214,7 @@ export function reorderWidgets(
   const result = [...widgets];
   const [removed] = result.splice(fromIndex, 1);
   result.splice(toIndex, 0, removed);
-  
+
   // Update positions to maintain order
   return result.map((widget, index) => ({
     ...widget,

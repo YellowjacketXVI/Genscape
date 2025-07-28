@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View, Dimensions } from 'react-native';
-import Colors from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -9,8 +9,10 @@ interface FeedLayoutProps {
 }
 
 export default function FeedLayout({ children }: FeedLayoutProps) {
+  const theme = useTheme();
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={styles.feedColumn}>
         {children}
       </View>
@@ -18,46 +20,51 @@ export default function FeedLayout({ children }: FeedLayoutProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.dark,
-    paddingLeft: 36, // 36px left padding as specified
-  },
-  feedColumn: {
-    flex: 1,
-    alignItems: 'flex-end', // Right-align the content
-    paddingRight: 16, // Some padding from the right edge
-  },
-});
-
-// Card component with specified dimensions
+// Card component with responsive dimensions
 interface FeedCardProps {
   children: React.ReactNode;
   style?: any;
 }
 
 export function FeedCard({ children, style }: FeedCardProps) {
+  const theme = useTheme();
+
+  // Responsive card sizing
+  const MAX_CARD_SIZE = 600;
+  const HORIZONTAL_PADDING = 32; // 16px on each side
+
+  const cardWidth = Math.min(MAX_CARD_SIZE, screenWidth - HORIZONTAL_PADDING);
+  const cardHeight = Math.min(MAX_CARD_SIZE, cardWidth * 0.88); // Maintain aspect ratio on small screens
+
+  const cardStyle = {
+    width: cardWidth,
+    height: cardHeight,
+    backgroundColor: theme.colors.cardBackground,
+    borderRadius: theme.borderRadius.xl,
+    marginBottom: theme.spacing.lg,
+    overflow: 'hidden' as const,
+    borderWidth: 1,
+    borderColor: theme.colors.cardBorder,
+    ...theme.shadows.md,
+  };
+
   return (
-    <View style={[styles.card, style]}>
+    <View style={[cardStyle, style]}>
       {children}
     </View>
   );
 }
 
-// Add card styles to the main styles object
-const cardStyles = {
-  card: {
-    width: 593, // Fixed width as specified
-    height: 524, // Fixed height as specified
-    backgroundColor: Colors.background.medium,
-    borderRadius: 16,
-    marginBottom: 24,
-    overflow: 'hidden',
-    // Ensure card doesn't exceed screen width on smaller devices
-    maxWidth: screenWidth - 52, // Account for left padding (36) + right padding (16)
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center', // Center content horizontally
+    paddingHorizontal: 16,
   },
-};
-
-// Merge with main styles
-Object.assign(styles, cardStyles);
+  feedColumn: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 600 + 32, // Max card width + padding
+    alignSelf: 'center',
+  },
+});

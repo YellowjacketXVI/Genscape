@@ -16,53 +16,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import Button from '@/components/ui/Button';
 import Avatar from '@/components/ui/Avatar';
 import LoadingScreen from '@/components/ui/LoadingScreen';
+import { getScapeById, getUserInteractions, DetailedScape } from '@/services/scapeService';
+import { toggleLike, toggleSave, toggleFollow, incrementViewCount } from '@/services/feedService';
 
-// Mock scape data - replace with API call
-const MOCK_SCAPE = {
-  id: '1',
-  title: 'Digital Dreams',
-  description: 'A collection of AI-generated landscapes that explore the intersection of technology and nature.',
-  banner: 'https://images.pexels.com/photos/1366957/pexels-photo-1366957.jpeg',
-  creator: {
-    id: 'user1',
-    username: 'creative_minds',
-    avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg',
-    followerCount: 1234,
-  },
-  stats: {
-    likes: 128,
-    comments: 32,
-    views: 2456,
-    saves: 89,
-  },
-  isLiked: false,
-  isSaved: false,
-  isFollowing: false,
-  isPublished: true,
-  createdAt: '2024-01-15T10:30:00Z',
-  widgets: [
-    {
-      id: 'w1',
-      type: 'text',
-      content: 'Welcome to my digital art collection. Each piece represents a unique vision of our technological future.',
-    },
-    {
-      id: 'w2',
-      type: 'image',
-      images: [
-        'https://images.pexels.com/photos/1366957/pexels-photo-1366957.jpeg',
-        'https://images.pexels.com/photos/3052361/pexels-photo-3052361.jpeg',
-      ],
-    },
-    {
-      id: 'w3',
-      type: 'audio',
-      audioUrl: 'https://example.com/ambient.mp3',
-      title: 'Ambient Soundscape',
-      description: 'Background music for the collection',
-    },
-  ],
-};
+interface ScapeInteractions {
+  isLiked: boolean;
+  isSaved: boolean;
+  isFollowing: boolean;
+}
 
 interface Scape {
   id: string;
@@ -104,17 +65,37 @@ export default function ScapeScreen() {
   const router = useRouter();
   const theme = useTheme();
   const { user } = useAuth();
-  const [scape, setScape] = useState<Scape | null>(null);
+  const [scape, setScape] = useState<DetailedScape | null>(null);
+  const [interactions, setInteractions] = useState<ScapeInteractions>({
+    isLiked: false,
+    isSaved: false,
+    isFollowing: false,
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // TODO: Replace with actual API call
     const fetchScape = async () => {
+      if (!id) return;
+
       try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setScape(MOCK_SCAPE);
+        const scapeData = await getScapeById(id, user?.id);
+        if (scapeData) {
+          setScape(scapeData);
+
+          // Increment view count
+          incrementViewCount(id);
+
+          // Get user interactions if logged in
+          if (user) {
+            const userInteractions = await getUserInteractions(id, user.id);
+            setInteractions(userInteractions);
+          }
+        } else {
+          Alert.alert('Error', 'Scape not found');
+          router.back();
+        }
       } catch (error) {
+        console.error('Error loading scape:', error);
         Alert.alert('Error', 'Failed to load scape');
         router.back();
       } finally {
@@ -125,40 +106,58 @@ export default function ScapeScreen() {
     fetchScape();
   }, [id]);
 
-  const handleLike = () => {
-    if (!scape) return;
-    setScape(prev => prev ? {
-      ...prev,
-      isLiked: !prev.isLiked,
-      stats: {
-        ...prev.stats,
-        likes: prev.stats.likes + (prev.isLiked ? -1 : 1),
-      },
-    } : null);
+  const handleLike = async () => {
+    if (!scape || !user) return;
+
+    try {
+      const newLikedState = await toggleLike(scape.id, user.id);
+      setInteractions(prev => ({ ...prev, isLiked: newLikedState }));
+      setScape(prev => prev ? {
+        ...prev,
+        stats: {
+          ...prev.stats,
+          likes: prev.stats.likes + (newLikedState ? 1 : -1),
+        },
+      } : null);
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      Alert.alert('Error', 'Failed to like scape');
+    }
   };
 
-  const handleSave = () => {
-    if (!scape) return;
-    setScape(prev => prev ? {
-      ...prev,
-      isSaved: !prev.isSaved,
-      stats: {
-        ...prev.stats,
-        saves: prev.stats.saves + (prev.isSaved ? -1 : 1),
-      },
-    } : null);
+  const handleSave = async () => {
+    if (!scape || !user) return;
+
+    try {
+      const newSavedState = await toggleSave(scape.id, user.id);
+      setInteractions(prev => ({ ...prev, isSaved: newSavedState }));
+      setScape(prev => prev ? {
+        ...prev,
+        stats: {
+          ...prev.stats,
+          saves: prev.stats.saves + (newSavedState ? 1 : -1),
+        },
+      } : null);
+    } catch (error) {
+      console.error('Error toggling save:', error);
+      Alert.alert('Error', 'Failed to save scape');
+    }
   };
 
-  const handleFollow = () => {
-    if (!scape) return;
-    setScape(prev => prev ? {
-      ...prev,
-      isFollowing: !prev.isFollowing,
-    } : null);
+  const handleFollow = async () => {
+    if (!scape || !user) return;
+
+    try {
+      const newFollowingState = await toggleFollow(scape.creator.id, user.id);
+      setInteractions(prev => ({ ...prev, isFollowing: newFollowingState }));
+    } catch (error) {
+      console.error('Error toggling follow:', error);
+      Alert.alert('Error', 'Failed to follow user');
+    }
   };
 
   const handleEdit = () => {
-    router.push(`/scape-manager/${id}/edit`);
+    router.push(`/scape-editor/${id}`);
   };
 
   const handleDelete = () => {
@@ -216,28 +215,44 @@ export default function ScapeScreen() {
         </View>
 
         {/* Banner Image */}
-        <Image source={{ uri: scape.banner }} style={styles.banner} resizeMode="cover" />
+        {scape.banner_image_id && (
+          <Image
+            source={{
+              uri: `https://msinxqvqjzlappkumynm.supabase.co/storage/v1/object/public/media/${scape.banner_image_id}`
+            }}
+            style={styles.banner}
+            resizeMode="cover"
+          />
+        )}
 
         {/* Content */}
         <View style={styles.content}>
           {/* Creator Info */}
           <View style={styles.creatorSection}>
             <View style={styles.creatorInfo}>
-              <Avatar source={{ uri: scape.creator.avatar }} size="md" fallbackText={scape.creator.username} />
+              <Avatar
+                source={{
+                  uri: scape.creator.avatar_url ?
+                    `https://msinxqvqjzlappkumynm.supabase.co/storage/v1/object/public/media/${scape.creator.avatar_url}` :
+                    undefined
+                }}
+                size="md"
+                fallbackText={scape.creator.username || 'U'}
+              />
               <View style={styles.creatorDetails}>
                 <Text style={[styles.creatorName, { color: theme.colors.textPrimary }]}>
                   @{scape.creator.username}
                 </Text>
                 <Text style={[styles.followerCount, { color: theme.colors.textSecondary }]}>
-                  {scape.creator.followerCount.toLocaleString()} followers
+                  {scape.creator.full_name || 'Creator'}
                 </Text>
               </View>
             </View>
             {!isOwner && (
               <Button
-                title={scape.isFollowing ? 'Following' : 'Follow'}
+                title={interactions.isFollowing ? 'Following' : 'Follow'}
                 onPress={handleFollow}
-                variant={scape.isFollowing ? 'secondary' : 'primary'}
+                variant={interactions.isFollowing ? 'secondary' : 'primary'}
                 size="sm"
               />
             )}
@@ -266,8 +281,8 @@ export default function ScapeScreen() {
               <TouchableOpacity onPress={handleLike} style={styles.actionButton}>
                 <Heart
                   size={24}
-                  fill={scape.isLiked ? theme.colors.primary : 'none'}
-                  color={scape.isLiked ? theme.colors.primary : theme.colors.textSecondary}
+                  fill={interactions.isLiked ? theme.colors.primary : 'none'}
+                  color={interactions.isLiked ? theme.colors.primary : theme.colors.textSecondary}
                 />
               </TouchableOpacity>
               <TouchableOpacity style={styles.actionButton}>
@@ -276,8 +291,8 @@ export default function ScapeScreen() {
               <TouchableOpacity onPress={handleSave} style={styles.actionButton}>
                 <Bookmark
                   size={24}
-                  fill={scape.isSaved ? theme.colors.primary : 'none'}
-                  color={scape.isSaved ? theme.colors.primary : theme.colors.textSecondary}
+                  fill={interactions.isSaved ? theme.colors.primary : 'none'}
+                  color={interactions.isSaved ? theme.colors.primary : theme.colors.textSecondary}
                 />
               </TouchableOpacity>
             </View>

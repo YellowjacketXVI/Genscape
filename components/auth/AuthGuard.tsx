@@ -16,7 +16,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     if (!initialized || loading) return;
 
     const inAuthGroup = segments[0] === 'auth';
-    const inProtectedGroup = segments[0] === '(tabs)' || segments[0] === 'creator-dashboard' || segments[0] === 'generate' || segments[0] === 'lora-studio' || segments[0] === 'scape-wizard';
+    const inProtectedGroup = segments[0] === '(tabs)' || segments[0] === 'creator-dashboard' || segments[0] === 'generate' || segments[0] === 'lora-studio' || segments[0] === 'scape-editor';
     const isRootPath = segments.length === 0 || (segments.length === 1 && segments[0] === 'index');
 
     if (!user && (inProtectedGroup || isRootPath)) {
