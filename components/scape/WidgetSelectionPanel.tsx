@@ -223,13 +223,13 @@ export default function WidgetSelectionPanel({
       Animated.timing(slideAnim, {
         toValue: 1,
         duration: 300,
-        useNativeDriver: true,
+        useNativeDriver: false, // Set to false for web compatibility
       }).start();
     } else {
       Animated.timing(slideAnim, {
         toValue: 0,
         duration: 300,
-        useNativeDriver: true,
+        useNativeDriver: false, // Set to false for web compatibility
       }).start();
       setSelectedCategory(null);
     }

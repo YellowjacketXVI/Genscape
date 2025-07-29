@@ -52,7 +52,6 @@ export default function ScapeEditorScreen() {
     featureWidgetId: null,
     tagline: '',
     isDraft: true,
-    visibility: 'public',
   });
   
   const [showWidgetPanel, setShowWidgetPanel] = useState(false);
@@ -131,7 +130,6 @@ export default function ScapeEditorScreen() {
             featureWidgetId: scape.feature_widget_id,
             tagline: scape.tagline,
             isDraft: !scape.is_published,
-            visibility: 'public', // Default to public, will be loaded from DB later
           });
         } else {
           Alert.alert('Error', 'Scape not found');

@@ -1,17 +1,16 @@
--- Migration to add missing columns to scapes and widgets tables
+-- Simplified migration to add essential missing columns to scapes and widgets tables
 -- Run this in your Supabase SQL editor
 
--- Add missing columns to scapes table
-ALTER TABLE scapes 
+-- Add essential missing columns to scapes table
+ALTER TABLE scapes
 ADD COLUMN IF NOT EXISTS tagline TEXT,
-ADD COLUMN IF NOT EXISTS feature_widget_id UUID REFERENCES widgets(id),
+ADD COLUMN IF NOT EXISTS feature_widget_id UUID,
 ADD COLUMN IF NOT EXISTS banner_static BOOLEAN DEFAULT false,
 ADD COLUMN IF NOT EXISTS save_count INTEGER DEFAULT 0,
-ADD COLUMN IF NOT EXISTS comment_count INTEGER DEFAULT 0,
-ADD COLUMN IF NOT EXISTS visibility TEXT DEFAULT 'public' CHECK (visibility IN ('public', 'private'));
+ADD COLUMN IF NOT EXISTS comment_count INTEGER DEFAULT 0;
 
 -- Add missing columns to widgets table
-ALTER TABLE widgets 
+ALTER TABLE widgets
 ADD COLUMN IF NOT EXISTS variant TEXT,
 ADD COLUMN IF NOT EXISTS channel TEXT;
 

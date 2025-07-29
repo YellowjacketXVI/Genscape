@@ -34,7 +34,7 @@ export interface ScapeEditorState {
   featureWidgetId: string | null;
   tagline: string;
   isDraft: boolean;
-  visibility: 'public' | 'private';
+  visibility?: 'public' | 'private'; // Optional until DB column exists
 }
 
 export type WidgetType = 
